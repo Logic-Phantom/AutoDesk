@@ -1,0 +1,91 @@
+import { listen } from '@tauri-apps/api/event';
+import { Bot, History, Inbox, LayoutDashboard, Settings as SettingsIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { APP_STATUS_LABEL } from './lib/format';
+import { useOverview } from './lib/useCore';
+import { Dashboard } from './pages/Dashboard';
+import { Automations } from './pages/Automations';
+import { Activity } from './pages/Activity';
+import { Approvals } from './pages/Approvals';
+import { Settings, type Theme } from './pages/Settings';
+
+const NAV = [
+  { id: 'dashboard', label: '대시보드', icon: LayoutDashboard },
+  { id: 'automations', label: '자동화', icon: Bot },
+  { id: 'activity', label: '이력', icon: History },
+  { id: 'approvals', label: '승인 센터', icon: Inbox },
+  { id: 'settings', label: '설정', icon: SettingsIcon },
+] as const;
+type Page = (typeof NAV)[number]['id'];
+
+function loadTheme(): Theme {
+  try {
+    const t = localStorage.getItem('theme');
+    if (t === 'light' || t === 'dark' || t === 'system') return t;
+  } catch {
+    /* 저장소를 못 쓰면 시스템 테마 */
+  }
+  return 'system';
+}
+
+export default function App() {
+  const { data, error } = useOverview();
+  const [page, setPage] = useState<Page>('dashboard');
+  const [theme, setThemeState] = useState<Theme>(loadTheme);
+
+  useEffect(() => {
+    if (theme === 'system') delete document.documentElement.dataset.theme;
+    else document.documentElement.dataset.theme = theme;
+  }, [theme]);
+
+  useEffect(() => {
+    const un = listen<string>('core://navigate', (e) => {
+      if (NAV.some((n) => n.id === e.payload)) setPage(e.payload as Page);
+    });
+    return () => {
+      un.then((f) => f());
+    };
+  }, []);
+
+  const setTheme = (t: Theme) => {
+    setThemeState(t);
+    try {
+      localStorage.setItem('theme', t);
+    } catch {
+      /* 무시 */
+    }
+  };
+
+  if (!data) {
+    return <div className="boot">{error ? `엔진 연결 실패: ${error}` : 'AutoDesk 시작 중…'}</div>;
+  }
+
+  const go = (p: string) => setPage(p as Page);
+
+  return (
+    <div className="shell">
+      <nav className="sidebar" aria-label="주 메뉴">
+        <div className="brand">
+          <span className="brand-mark" aria-hidden>A</span> AutoDesk
+        </div>
+        {NAV.map(({ id, label, icon: Icon }) => (
+          <button key={id} className={`nav ${page === id ? 'active' : ''}`} onClick={() => setPage(id)} aria-current={page === id}>
+            <Icon size={18} aria-hidden />
+            <span>{label}</span>
+            {id === 'approvals' && data.pendingApprovals > 0 && <span className="badge">{data.pendingApprovals}</span>}
+          </button>
+        ))}
+        <div className={`sidebar-status ${data.masterEnabled ? 'on' : 'off'}`}>
+          <span className="dot" aria-hidden /> {APP_STATUS_LABEL[data.status]}
+        </div>
+      </nav>
+      <main className="main">
+        {page === 'dashboard' && <Dashboard data={data} go={go} />}
+        {page === 'automations' && <Automations data={data} />}
+        {page === 'activity' && <Activity tick={data} />}
+        {page === 'approvals' && <Approvals tick={data} />}
+        {page === 'settings' && <Settings data={data} theme={theme} setTheme={setTheme} />}
+      </main>
+    </div>
+  );
+}
