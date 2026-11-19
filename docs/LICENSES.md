@@ -11,6 +11,7 @@ AutoDesk 자체 코드: **MIT** ([LICENSE](../LICENSE)). 개인용이며 판매�
 | notify | 파일 감시 | CC0-1.0 |
 | sha2, hex, uuid, chrono, serde, serde_json | 해시·ID·시간·직렬화 | MIT OR Apache-2.0 |
 | similar | 텍스트 diff | Apache-2.0 |
+| encoding_rs | LogWatcher의 EUC-KR 로그 해석 | (Apache-2.0 OR MIT) AND BSD-3-Clause |
 | react, react-dom | UI | MIT |
 | lucide-react | 아이콘 | ISC |
 | @tauri-apps/api, @tauri-apps/plugin-dialog | 프런트-코어 연결 | MIT OR Apache-2.0 |
