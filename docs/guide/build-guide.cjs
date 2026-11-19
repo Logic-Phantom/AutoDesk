@@ -374,6 +374,7 @@ body.push(P('이 설명서의 스크린샷은 Windows 11에서 실제 설치본(
 // ---------- document ----------
 const doc = new Document({
   creator: 'Logic-Phantom',
+  lastModifiedBy: 'Logic-Phantom',
   title: 'AutoDesk 사용 설명서',
   description: 'AutoDesk v0.1.0 사용 설명서',
   features: { updateFields: true },
