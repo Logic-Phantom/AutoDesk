@@ -85,7 +85,7 @@ export function Dashboard({ data, go }: { data: Overview; go: (p: string) => voi
                   <div className="ellipsis">
                     <div className="ellipsis">{a.message}</div>
                     <div className="muted small ellipsis">
-                      {MODULE_NAME[a.moduleId] ?? a.moduleId} · {a.target ?? ''} · {formatTime(a.createdAt)}
+                      {[MODULE_NAME[a.moduleId] ?? a.moduleId, a.target, formatTime(a.createdAt)].filter(Boolean).join(' · ')}
                     </div>
                   </div>
                   <span className={`result ${a.result}`}>{RESULT_LABEL[a.result]}</span>

@@ -118,7 +118,7 @@ function UninstallCard() {
         <p className="notice ok">{done}</p>
       ) : (
         <>
-          <table className="table">
+          <table className="table kv">
             <tbody>
               {preview.items.map((i) => (
                 <tr key={i.label + (i.path ?? '')}>

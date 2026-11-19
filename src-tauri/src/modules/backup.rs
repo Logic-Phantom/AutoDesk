@@ -267,7 +267,7 @@ const TEXT_EXT: &[&str] = &[
 ];
 
 #[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase", tag = "kind")]
+#[serde(tag = "kind", rename_all_fields = "camelCase")]
 pub enum DiffResult {
     Text { diff: String, identical: bool },
     Binary { snapshot_size: i64, snapshot_hash: String, current_size: Option<u64>, current_hash: Option<String> },
@@ -384,5 +384,22 @@ mod tests {
             }
             _ => panic!("expected text diff"),
         }
+    }
+
+    #[test]
+    fn diff_result_matches_frontend_contract() {
+        // 프런트(api.ts)의 DiffResult 타입과 같은 모양이어야 한다.
+        let v = serde_json::to_value(DiffResult::Binary {
+            snapshot_size: 1,
+            snapshot_hash: "a".into(),
+            current_size: None,
+            current_hash: None,
+        })
+        .unwrap();
+        assert_eq!(v["kind"], "Binary");
+        assert_eq!(v["snapshotSize"], 1);
+        let t = serde_json::to_value(DiffResult::Text { diff: "d".into(), identical: true }).unwrap();
+        assert_eq!(t["kind"], "Text");
+        assert_eq!(t["identical"], true);
     }
 }

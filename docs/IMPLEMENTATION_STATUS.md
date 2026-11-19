@@ -20,20 +20,25 @@
 | NSIS 제거(`uninstall.exe /S`) → 실행 중 앱 정상 종료, Run 값 삭제, 설치 폴더·시작 메뉴·제거 등록 삭제 | ✅ (데이터는 제거 화면 체크박스 선택 시 삭제 — Tauri 템플릿 확인) |
 | 앱 내 완전 제거(자동 실행 ON 상태) → 프로세스 종료, Run·StartupApproved 값, Roaming·Local 데이터, 설치본 삭제, 보고서 생성, 도우미 자기 삭제, 감시 폴더 원본 보존 | ✅ |
 | 확인 문구 불일치 시 제거 거부 | ✅ |
+| 실행 중인 앱 위에 업데이트 설치 → 기존 앱 정상 종료, 설정·백업 유지 | ✅ |
+| 백업 버전 비교(텍스트 diff) 화면 | ✅ (스크린샷 확인) |
+| 승인 센터에서 이동 승인 → 하위 폴더로 이동 | ✅ |
+| CI(GitHub Actions) Windows·macOS 빌드 | ✅ |
 
 검증 중 발견·수정한 버그
 
 1. 백업 라우팅에서 `for` 식의 임시 DB 잠금이 루프 내내 유지돼 같은 스레드에서 재잠금 → 엔진 교착. 목록을 먼저 꺼내도록 수정하고, 종료 경로는 `try_lock`으로 바꿔 엔진이 멈춰도 종료가 막히지 않게 함.
 2. 완전 제거 도우미가 부모의 Job 객체에 묶여 앱 종료와 함께 사라짐 → `CREATE_BREAKAWAY_FROM_JOB`(불가 시 일반 실행)으로 수정.
+3. 백업 비교(diff) 응답의 필드 이름이 프런트 계약과 달라 "NaN KB"로 표시 → `rename_all_fields`로 수정, 계약 테스트 추가.
 
 ## Windows — 아직 직접 확인하지 않음
 
 - 재부팅/재로그인 후 실제 자동 시작(등록 값은 확인)
 - 트레이 메뉴 클릭, 창 닫기 → 트레이 상주 알림(코드 경로는 `CloseRequested` 처리)
-- Download Butler 승인→이동→되돌리기, 자동(AUTO) 모드, 다른 드라이브로의 이동
-- 백업 복원(사본/덮어쓰기)·diff 화면, 용량 제한 정리(단위 테스트로만 확인)
+- Download Butler 되돌리기 실행, 자동(AUTO) 모드, 다른 드라이브로의 이동
+- 백업 복원(사본/덮어쓰기) 실행, 용량 제한 정리(단위 테스트로만 확인)
 - Claude Code 다듬기(이 PC에 `claude` CLI가 PATH에 없음 — 설치 후 확인 필요)
-- 화면 디자인 전체 점검(스크린샷 검증 미실시)
+- 화면은 전 페이지를 스크린샷으로 점검함(docs/guide/images). 창 크기 변경·고배율 DPI는 미확인
 
 ## macOS — NOT_VERIFIED_ON_MACOS
 
@@ -41,7 +46,7 @@
 
 ## 자동 테스트
 
-Rust 29개 통과, Vitest 4개 통과, TypeScript strict typecheck·ESLint 통과.
+Rust 30개 통과, Vitest 4개 통과, TypeScript strict typecheck·ESLint 통과.
 
 ## 다음 작업
 

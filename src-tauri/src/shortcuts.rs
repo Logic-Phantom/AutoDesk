@@ -128,6 +128,7 @@ fn run_clean(core: &Arc<Core>) {
     };
     // 이력에는 건수만 남긴다. 텍스트는 저장하지 않는다.
     let _ = crate::db::add_activity(&core.db(), modules::AUTOPASTE, "clipboard.clean", result, None, &msg, None, None);
+    let _ = crate::db::record_module_run(&core.db(), modules::AUTOPASTE, None);
     if cfg.notify {
         core.notify("AutoPaste", &msg);
     }
@@ -153,5 +154,6 @@ fn run_ai(core: &Arc<Core>) {
         Err(e) => ("failed", e.message),
     };
     let _ = crate::db::add_activity(&core.db(), modules::AUTOPASTE, "clipboard.ai_polish", result, None, &msg, None, None);
+    let _ = crate::db::record_module_run(&core.db(), modules::AUTOPASTE, None);
     core.notify("AI 다듬기", &msg);
 }

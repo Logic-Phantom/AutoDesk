@@ -20,6 +20,16 @@
 | **AutoPaste** | `Ctrl+Alt+Shift+V`(macOS `⌘⌥⇧V`)를 누르면 클립보드 텍스트의 줄 끝 공백·NBSP·보이지 않는 문자·중복 빈 줄 정리 | 단축키 누를 때만 읽음, 내용 저장 안 함, 코드·URL·이모지 결합 문자 보존 |
 | (선택) **Claude Code 다듬기** | `Ctrl+Alt+Shift+B`로 맞춤법·띄어쓰기 교정 | 기본 OFF, 외부 전송 동의 필요, 내 Claude 구독 플랜 사용(추가 요금·API 키 없음) |
 
+## 사용 설명서
+
+스크린샷으로 단계별 사용법을 정리한 설명서(24쪽): **[PDF](docs/guide/AutoDesk_사용설명서.pdf)** · **[Word](docs/guide/AutoDesk_사용설명서.docx)**
+
+| 대시보드 | 승인 센터 |
+|---|---|
+| ![대시보드](docs/guide/images/01-dashboard.png) | ![승인 센터](docs/guide/images/08-approvals.png) |
+| **버전 기록·복원** | **완전 제거** |
+| ![버전 기록](docs/guide/images/04-backup-versions.png) | ![완전 제거](docs/guide/images/11-uninstall.png) |
+
 ## 설치
 
 1. [Releases](https://github.com/Logic-Phantom/AutoDesk/releases) 또는 [Actions](https://github.com/Logic-Phantom/AutoDesk/actions) 아티팩트에서 설치 파일을 받는다.
@@ -149,6 +159,14 @@ npm run tauri:build
 
 1. 백업 처리 중 엔진이 DB 잠금을 쥔 채 다시 잠그며 멈추고, 그 상태로 종료하면 앱도 멈춤 → 잠금 범위 수정 + 종료 경로는 `try_lock`으로 막히지 않게 보완
 2. 완전 제거 도우미가 앱과 함께 꺼져 아무것도 지워지지 않음 → Job 객체에서 이탈해 실행(`CREATE_BREAKAWAY_FROM_JOB`)
+
+### 2026-11-19 — 사용 설명서 · 화면 개선
+
+- 사용 설명서 PDF/Word(24쪽, 실제 설치본 스크린샷 12장) — 설치, 화면 구성, 켜고 끄기, 기능별 사용법, 승인·되돌리기, AI 다듬기 설정, 완전 제거, FAQ
+- 스크린샷 검증 중 발견한 버그 수정: 백업 **비교** 결과가 "NaN KB"로 나오던 문제(Rust↔TS 필드 이름 불일치) + 회귀 테스트 추가(Rust 30개)
+- 화면 다듬기: AutoPaste 마지막 실행 시각 기록, 대시보드 빈 항목 구분점, 긴 경로 줄바꿈, 제거 표 열 폭, 소제목 대문자 변환 제거
+- 업데이트 설치 검증: 실행 중인 앱 위에 새 설치본을 설치하면 기존 앱이 정상 종료되고 설정·백업은 유지
+- CI: Windows·macOS 빌드 모두 성공
 
 #### 아직 확인하지 않은 것
 

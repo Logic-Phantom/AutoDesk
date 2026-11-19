@@ -63,7 +63,7 @@ body { margin: 0; background: var(--bg); }
 button, input, select, textarea { font: inherit; color: inherit; }
 h1 { font-size: 22px; margin: 0 0 4px; }
 h2 { font-size: 15px; margin: 0; }
-h3 { font-size: 13px; margin: 18px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+h3 { font-size: 13px; margin: 18px 0 8px; color: var(--muted); letter-spacing: .02em; }
 p { margin: 6px 0; line-height: 1.5; }
 code, kbd, .mono { font-family: 'Cascadia Code', 'SF Mono', Consolas, monospace; font-size: 12.5px; }
 kbd { background: var(--surface-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; }
@@ -100,7 +100,8 @@ kbd { background: var(--surface-2); border: 1px solid var(--border); border-radi
 .row:last-of-type { border-bottom: 0; }
 .row-label { font-weight: 500; }
 .row-hint { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
-.row-control { flex-shrink: 0; }
+.row-control { flex-shrink: 0; max-width: 60%; }
+.row-control .mono { word-break: break-all; }
 
 .toggle { width: 42px; height: 24px; border-radius: 999px; border: 0; background: var(--border); position: relative; cursor: pointer; transition: background .15s; padding: 0; }
 .toggle .knob { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
@@ -170,6 +171,8 @@ textarea.input { width: 100%; resize: vertical; }
 .table th { text-align: left; font-size: 12px; color: var(--muted); font-weight: 500; padding: 6px 8px; border-bottom: 1px solid var(--border); }
 .table td { padding: 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
 .table tr:last-child td { border-bottom: 0; }
+.table.kv td:first-child { white-space: nowrap; width: 1%; }
+.table td.mono { word-break: break-all; }
 
 .versions { display: flex; flex-direction: column; gap: 10px; }
 .diff pre { background: var(--surface-2); border-radius: 8px; padding: 10px; max-height: 320px; overflow: auto; font-size: 12px; margin: 0; }
