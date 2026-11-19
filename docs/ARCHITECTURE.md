@@ -13,9 +13,9 @@ Rust Core (src-tauri/src/)  ── 프로세스 1개, 관리자 권한 없음, �
   shortcuts.rs   전역 단축키 등록/해제(AutoPaste, AI 다듬기)
   tray.rs        트레이/메뉴 막대(체크 상태는 Core에서 다시 그림)
   commands.rs    Tauri 명령(입력 검증)
-  db.rs          SQLite(마이그레이션) — settings, modules, watch_targets, jobs, activity, file_versions, file_moves
+  db.rs          SQLite(마이그레이션 v2) — settings, modules, watch_targets, jobs, activity, file_versions, file_moves, log_offsets, log_issues
   fsutil.rs      SHA-256, 안정성 확인, 충돌 없는 이름, 안전 이동, 경로 검증, 제외 패턴
-  modules/       backup.rs · downloads.rs · autopaste.rs (순수 로직 + 테스트)
+  modules/       backup.rs · downloads.rs · autopaste.rs · logwatch.rs (순수 로직 + 테스트)
   ai.rs          (선택) Claude Code CLI 호출
   platform.rs    OS 어댑터: autostart, 설치 위치, 앱 소유 경로
   uninstall.rs   완전 제거(미리보기 + 일회성 정리 도우미)

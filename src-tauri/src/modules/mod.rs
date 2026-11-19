@@ -3,12 +3,14 @@
 pub mod autopaste;
 pub mod backup;
 pub mod downloads;
+pub mod logwatch;
 
 use serde::Serialize;
 
 pub const BACKUP: &str = "backup";
 pub const DOWNLOADS: &str = "downloads";
 pub const AUTOPASTE: &str = "autopaste";
+pub const LOGWATCH: &str = "logwatch";
 
 #[derive(Debug, Clone, Copy, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -38,6 +40,12 @@ pub const REGISTRY: &[ModuleMeta] = &[
         description: "단축키를 누르면 클립보드 텍스트의 불필요한 공백·특수문자를 정리합니다. 원문은 저장하지 않습니다.",
         default_enabled: true,
     },
+    ModuleMeta {
+        id: LOGWATCH,
+        name: "LogWatcher",
+        description: "선택한 로그 파일에 새로 쌓이는 줄만 읽어 ERROR·Exception을 찾고, 같은 오류는 묶어서 알립니다. 로그는 밖으로 보내지 않습니다.",
+        default_enabled: true,
+    },
 ];
 
 pub fn meta(id: &str) -> Option<&'static ModuleMeta> {
@@ -49,6 +57,7 @@ pub fn default_config(id: &str) -> String {
         BACKUP => serde_json::to_string(&backup::BackupConfig::default()),
         DOWNLOADS => serde_json::to_string(&downloads::DownloadsConfig::default()),
         AUTOPASTE => serde_json::to_string(&autopaste::AutoPasteConfig::default()),
+        LOGWATCH => serde_json::to_string(&logwatch::LogWatchConfig::default()),
         _ => Ok("{}".into()),
     }
     .unwrap_or_else(|_| "{}".into())

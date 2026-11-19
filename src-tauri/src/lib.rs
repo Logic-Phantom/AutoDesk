@@ -135,6 +135,8 @@ pub fn run() {
             commands::restore_version,
             commands::get_settings,
             commands::set_setting,
+            commands::list_log_issues,
+            commands::clear_log_issues,
             commands::ai_status,
             commands::uninstall_preview,
             commands::uninstall_execute,

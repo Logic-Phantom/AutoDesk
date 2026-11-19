@@ -12,6 +12,7 @@ OS 차이는 `platform.rs`, `uninstall.rs`(cfg 분기), `ai.rs`(CLI 탐색 경�
 | 다운로드 폴더 탐지 | Known Folder API | `~/Downloads` | Tauri path API |
 | 전역 단축키 | Ctrl+Alt+Shift+V | ⌘⌥⇧V | macOS는 손쉬운 사용 권한이 필요할 수 있음 |
 | 클립보드 텍스트 | ✅ | ✅ | |
+| LogWatcher(로그 파일 폴더 감시) | ✅ | ✅(빌드) | 로그 파일의 상위 폴더를 감시해 로테이션에도 따라감 |
 | 알림 | 설치본에서만 정상(개발 실행은 PowerShell 이름) | 첫 실행 시 권한 요청 | |
 | 폴더 접근 | 제한 없음 | 문서/데스크톱/다운로드 접근 시 OS 권한 창 | 거부되면 해당 모듈만 `설정 필요` |
 | 설치 형식 | NSIS(현재 사용자) | .app / .dmg | 둘 다 서명 안 함 |

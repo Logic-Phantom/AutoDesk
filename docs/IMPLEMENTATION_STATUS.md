@@ -1,6 +1,6 @@
-# 구현 상태 (2026-11-19, v0.1.0)
+# 구현 상태 (2026-11-19, v0.2.0)
 
-검증 환경: Windows 11 Home 10.0.26200 x64, Rust 1.100, Node 24, Tauri 2.12, 릴리스 빌드 + NSIS 설치본(2.63 MiB).
+검증 환경: Windows 11 Home 10.0.26200 x64, Rust 1.100, Node 24, Tauri 2.12, 릴리스 빌드 + NSIS 설치본(v0.2.0, 2.76 MiB).
 앱 명령은 설치본을 WebView2 원격 디버깅 포트로 띄워 실제 `invoke`로 호출해 확인했다(테스트 전용, 앱 코드에는 포함 안 됨).
 
 ## Windows — 실제 확인함
@@ -24,19 +24,30 @@
 | 백업 버전 비교(텍스트 diff) 화면 | ✅ (스크린샷 확인) |
 | 승인 센터에서 이동 승인 → 하위 폴더로 이동 | ✅ |
 | CI(GitHub Actions) Windows·macOS 빌드 | ✅ |
+| Download Butler AUTO 모드: 확실한 PDF 자동 이동, `.pdf`로 위장한 실행 파일은 승인 대기, 제외 확장자(iso)·`.crdownload` 무시 | ✅ |
+| 이름 충돌 시 `report (2).pdf`, 되돌리기 후 원위치, 같은 이동 두 번 되돌리기 거부 | ✅ |
+| 백업 사본 복원(`a (복원 MMDD-HHMM).txt`)·덮어쓰기 복원(직전 상태 먼저 백업), 보관 개수 2개 제한 적용 | ✅ |
+| 모듈 OFF 동안 새 다운로드 처리 안 함 | ✅ |
+| 잘못된 입력 거부: 알 수 없는 모듈, 잘못된 모드, 동의 없는 AI, 허용 안 된 설정 키, 시스템 폴더, 앱 데이터 폴더 | ✅ |
+| 창 닫기(백그라운드 ON) → 숨김·`BACKGROUND_ACTIVE`, 두 번째 실행 → 기존 창 표시, 백그라운드 OFF에서 창 닫기 → 정상 종료 | ✅ |
+| v1 → v2 DB 마이그레이션(데이터 유지, `autodesk.v1.bak` 생성) | ✅ |
+| LogWatcher: 등록 전 내용 무시, 같은 오류(숫자만 다름) 3회 → 1건·3회, 스택 트레이스 문맥 보관, 미완성 줄 대기, EUC-KR 로그, 로테이션 감지, WARN 기록만, 모듈 OFF 동안 미처리 후 다시 켜면 이어서 검사 | ✅ |
 
 검증 중 발견·수정한 버그
 
 1. 백업 라우팅에서 `for` 식의 임시 DB 잠금이 루프 내내 유지돼 같은 스레드에서 재잠금 → 엔진 교착. 목록을 먼저 꺼내도록 수정하고, 종료 경로는 `try_lock`으로 바꿔 엔진이 멈춰도 종료가 막히지 않게 함.
 2. 완전 제거 도우미가 부모의 Job 객체에 묶여 앱 종료와 함께 사라짐 → `CREATE_BREAKAWAY_FROM_JOB`(불가 시 일반 실행)으로 수정.
 3. 백업 비교(diff) 응답의 필드 이름이 프런트 계약과 달라 "NaN KB"로 표시 → `rename_all_fields`로 수정, 계약 테스트 추가.
+4. AUTO 모드에서 '되돌리기'한 파일이 나중에 수정되면 다시 옮겨질 수 있음 → 되돌린 이동과 같은 내용(SHA-256)이면 건너뜀.
+5. 분류 경로에 `/`와 `\`가 섞임 → OS 구분자로 조립(`category_dir`, `..` 제거).
+6. LogWatcher 반복 오류가 처음의 스택 트레이스 문맥을 한 줄로 덮어씀 → 더 긴 문맥 유지.
 
 ## Windows — 아직 직접 확인하지 않음
 
 - 재부팅/재로그인 후 실제 자동 시작(등록 값은 확인)
 - 트레이 메뉴 클릭, 창 닫기 → 트레이 상주 알림(코드 경로는 `CloseRequested` 처리)
-- Download Butler 되돌리기 실행, 자동(AUTO) 모드, 다른 드라이브로의 이동
-- 백업 복원(사본/덮어쓰기) 실행, 용량 제한 정리(단위 테스트로만 확인)
+- 다른 드라이브(볼륨)로의 이동(복사→해시 검증 경로는 단위 테스트만)
+- 전체 용량 제한 정리(단위 테스트로만 확인)
 - Claude Code 다듬기(이 PC에 `claude` CLI가 PATH에 없음 — 설치 후 확인 필요)
 - 화면은 전 페이지를 스크린샷으로 점검함(docs/guide/images). 창 크기 변경·고배율 DPI는 미확인
 
@@ -46,11 +57,10 @@
 
 ## 자동 테스트
 
-Rust 30개 통과, Vitest 4개 통과, TypeScript strict typecheck·ESLint 통과.
+Rust 38개 통과, Vitest 4개 통과, TypeScript strict typecheck·ESLint 통과.
 
 ## 다음 작업
 
-1. 설치본으로 남은 Windows 수동 QA([TESTING.md](TESTING.md) 체크리스트)
-2. macOS 실기기 QA
-3. Claude Code CLI 설치 후 AI 다듬기 실사용 확인
-4. 후속 모듈 중 하나(LogWatcher 또는 Daily Digest) 설계·구현
+1. macOS 실기기 QA
+2. Claude Code CLI 설치 후 AI 다듬기 실사용 확인
+3. 후속 모듈(Daily Work Digest 또는 Document Guard)

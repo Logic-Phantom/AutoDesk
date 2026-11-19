@@ -35,6 +35,11 @@ pub const CATEGORY_FOLDERS: &[&str] = &[
     "Installers",
 ];
 
+/// `Documents/PDF` 같은 분류 이름을 OS 경로 구분자에 맞게 붙인다.
+pub fn category_dir(base: &Path, category: &str) -> std::path::PathBuf {
+    category.split('/').filter(|p| !p.is_empty() && *p != "..").fold(base.to_path_buf(), |acc, p| acc.join(p))
+}
+
 pub fn should_ignore(path: &Path, cfg: &DownloadsConfig) -> bool {
     let name = match path.file_name().and_then(|n| n.to_str()) {
         Some(n) => n,
@@ -103,6 +108,13 @@ pub fn classify(path: &Path) -> (Option<&'static str>, bool) {
 mod tests {
     use super::*;
     use std::fs;
+
+    #[test]
+    fn category_dir_uses_native_separators() {
+        let p = category_dir(Path::new("base"), "Documents/PDF");
+        assert_eq!(p, Path::new("base").join("Documents").join("PDF"));
+        assert_eq!(category_dir(Path::new("b"), "../x"), Path::new("b").join("x"));
+    }
 
     #[test]
     fn extension_rules() {

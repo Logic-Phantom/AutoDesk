@@ -7,7 +7,7 @@
 use crate::db::{self, WatchTarget};
 use crate::error::{AppError, AppResult};
 use crate::fsutil;
-use crate::modules::{self, autopaste::AutoPasteConfig, backup, downloads};
+use crate::modules::{self, autopaste::AutoPasteConfig, backup, downloads, logwatch};
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
@@ -371,6 +371,17 @@ impl Core {
                 }
                 serde_json::to_string(&c)?
             }
+            modules::LOGWATCH => {
+                let mut c: logwatch::LogWatchConfig = serde_json::from_value(config)?;
+                c.error_patterns.retain(|p| !p.trim().is_empty());
+                c.warn_patterns.retain(|p| !p.trim().is_empty());
+                if c.error_patterns.is_empty() {
+                    return Err(AppError::invalid("오류 패턴을 하나 이상 입력하세요"));
+                }
+                c.renotify_minutes = c.renotify_minutes.clamp(1, 24 * 60);
+                c.context_lines = c.context_lines.min(20);
+                serde_json::to_string(&c)?
+            }
             _ => return Err(AppError::invalid("알 수 없는 모듈입니다")),
         };
         db::set_module_config(&self.db(), id, &normalized)?;
@@ -412,6 +423,15 @@ impl Core {
             modules::DOWNLOADS => {
                 if self.download_dirs().is_empty() {
                     return (ModuleStatus::WaitingPermission, Some("다운로드 폴더를 찾을 수 없습니다".into()));
+                }
+            }
+            modules::LOGWATCH => {
+                let targets = db::list_watch_targets(&self.db(), Some(modules::LOGWATCH)).unwrap_or_default();
+                if targets.is_empty() {
+                    return (ModuleStatus::WaitingPermission, Some("감시할 로그 파일을 추가하세요".into()));
+                }
+                if !targets.iter().any(|t| t.enabled && Path::new(&t.path).is_file()) {
+                    return (ModuleStatus::WaitingPermission, Some("등록한 로그 파일을 찾을 수 없습니다".into()));
                 }
             }
             modules::AUTOPASTE => {
@@ -486,6 +506,17 @@ impl Core {
         if self.is_module_running(modules::DOWNLOADS) {
             for d in self.download_dirs() {
                 want.entry(d).or_insert(false);
+            }
+        }
+        if self.is_module_running(modules::LOGWATCH) {
+            // 파일 자체가 아니라 폴더를 감시해야 로그 로테이션(삭제 후 재생성)에도 계속 따라간다.
+            let targets = db::list_watch_targets(&self.db(), Some(modules::LOGWATCH)).unwrap_or_default();
+            for t in targets {
+                if let Some(parent) = Path::new(&t.path).parent() {
+                    if t.enabled && parent.is_dir() {
+                        want.entry(parent.to_path_buf()).or_insert(false);
+                    }
+                }
             }
         }
         want
@@ -635,6 +666,155 @@ impl Core {
                 }
             }
         }
+        if self.is_module_running(modules::LOGWATCH) {
+            let targets = db::list_watch_targets(&self.db(), Some(modules::LOGWATCH)).unwrap_or_default();
+            for t in targets.into_iter().filter(|t| t.enabled && Path::new(&t.path) == path) {
+                // 로그는 append 위치(offset)로 상태를 이어가므로 작업 큐를 거치지 않고 바로 읽는다.
+                let r = self.handle_log(&t);
+                if let Err(e) = &r {
+                    let _ = db::add_activity(&self.db(), modules::LOGWATCH, "log.read", "failed",
+                        Some(&fsutil::short_path(path)), &e.message, Some(e.code), None);
+                }
+                self.record_run(modules::LOGWATCH, r.as_ref().err());
+                self.notify_changed();
+            }
+        }
+    }
+
+    // ---------------- LogWatcher ----------------
+
+    fn log_offset(&self, target_id: &str) -> AppResult<Option<u64>> {
+        use rusqlite::OptionalExtension;
+        Ok(self
+            .db()
+            .query_row("SELECT offset FROM log_offsets WHERE target_id=?1", [target_id], |r| r.get::<_, i64>(0))
+            .optional()?
+            .map(|v| v.max(0) as u64))
+    }
+
+    fn set_log_offset(&self, target_id: &str, offset: u64) -> AppResult<()> {
+        self.db().execute(
+            "INSERT INTO log_offsets(target_id, offset, updated_at) VALUES(?1,?2,?3)
+             ON CONFLICT(target_id) DO UPDATE SET offset=excluded.offset, updated_at=excluded.updated_at",
+            rusqlite::params![target_id, offset as i64, db::now()],
+        )?;
+        Ok(())
+    }
+
+    /// 마지막으로 읽은 위치부터 끝까지(한 번에 최대 16MB) 새 줄만 읽어 검사한다.
+    fn handle_log(&self, t: &WatchTarget) -> AppResult<usize> {
+        use std::io::{Read, Seek, SeekFrom};
+        let cfg: logwatch::LogWatchConfig = self.module_config(modules::LOGWATCH);
+        let path = Path::new(&t.path);
+        let len = std::fs::metadata(path)?.len();
+        let mut offset = self.log_offset(&t.id)?.unwrap_or(len);
+        if len < offset {
+            // 파일이 줄었다 = 로테이션/초기화 → 처음부터
+            offset = 0;
+            db::add_activity(&self.db(), modules::LOGWATCH, "log.rotate", "completed", Some(&fsutil::short_path(path)),
+                "로그 파일이 새로 시작되어 처음부터 읽습니다", None, None)?;
+        }
+        if len == offset {
+            return Ok(0);
+        }
+        let max = 16 * 1024 * 1024u64;
+        // 너무 많이 쌓였으면(16MB 초과) 끝부분만 본다.
+        let start = if len - offset > max { len - max } else { offset };
+        let want = (len - start) as usize;
+        let mut f = std::fs::File::open(path)?;
+        f.seek(SeekFrom::Start(start))?;
+        let mut buf = vec![0u8; want];
+        f.read_exact(&mut buf)?;
+        let complete = logwatch::complete_len(&buf);
+        if complete == 0 {
+            return Ok(0); // 아직 줄이 끝나지 않음
+        }
+        let text = logwatch::decode(&buf[..complete]);
+        let found = logwatch::scan(&text, &[], &cfg);
+        let mut new_alerts = 0;
+        for item in &found {
+            if self.record_log_issue(t, item, &cfg)? {
+                new_alerts += 1;
+            }
+        }
+        self.set_log_offset(&t.id, start + complete as u64)?;
+        Ok(new_alerts)
+    }
+
+    /// 같은 지문의 오류는 횟수만 늘린다. 처음이거나 재알림 간격이 지났으면 알림 + 이력에 남긴다.
+    fn record_log_issue(&self, t: &WatchTarget, item: &logwatch::Found, cfg: &logwatch::LogWatchConfig) -> AppResult<bool> {
+        use rusqlite::OptionalExtension;
+        let now = chrono::Utc::now();
+        let existing: Option<(i64, Option<String>)> = self
+            .db()
+            .query_row(
+                "SELECT count, last_notified FROM log_issues WHERE fingerprint=?1 AND target_id=?2",
+                rusqlite::params![item.fingerprint, t.id],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .optional()?;
+        let should_alert = match &existing {
+            None => true,
+            Some((_, last)) => last
+                .as_deref()
+                .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
+                .map(|l| now.signed_duration_since(l) >= chrono::Duration::minutes(cfg.renotify_minutes))
+                .unwrap_or(true),
+        };
+        let alert = should_alert && (item.level == logwatch::Level::Error || cfg.notify_warn);
+        let ts = now.to_rfc3339();
+        if existing.is_none() {
+            self.db().execute(
+                "INSERT INTO log_issues(fingerprint, target_id, level, sample, context, count, first_seen, last_seen, last_notified)
+                 VALUES(?1,?2,?3,?4,?5,1,?6,?6,?7)",
+                rusqlite::params![item.fingerprint, t.id, item.level.as_str(), item.line, item.context, ts,
+                    if alert { Some(ts.clone()) } else { None }],
+            )?;
+        } else {
+            self.db().execute(
+                // 문맥은 더 많은 정보(스택 트레이스 등)를 담은 쪽을 유지한다.
+                "UPDATE log_issues SET count=count+1, last_seen=?3, sample=?4,
+                   context = CASE WHEN length(?5) >= length(context) THEN ?5 ELSE context END,
+                   last_notified = CASE WHEN ?6 THEN ?3 ELSE last_notified END
+                 WHERE fingerprint=?1 AND target_id=?2",
+                rusqlite::params![item.fingerprint, t.id, ts, item.line, item.context, alert],
+            )?;
+        }
+        if !alert {
+            return Ok(false);
+        }
+        let file = fsutil::short_path(Path::new(&t.path));
+        let count = existing.map(|e| e.0 + 1).unwrap_or(1);
+        let label = if count == 1 { "새 오류".to_string() } else { format!("반복 오류({count}회)") };
+        let preview: String = item.line.chars().take(120).collect();
+        db::add_activity(&self.db(), modules::LOGWATCH, "log.issue", "completed", Some(&file),
+            &format!("{} {label}: {preview}", item.level.as_str()), None, None)?;
+        self.notify(&format!("LogWatcher · {label}"), &format!("{file}\n{preview}"));
+        Ok(true)
+    }
+
+    pub fn list_log_issues(&self, target_id: Option<&str>) -> AppResult<Vec<serde_json::Value>> {
+        let conn = self.db();
+        let mut stmt = conn.prepare(
+            "SELECT i.fingerprint, i.target_id, w.path, i.level, i.sample, i.context, i.count, i.first_seen, i.last_seen
+             FROM log_issues i LEFT JOIN watch_targets w ON w.id = i.target_id
+             WHERE (?1 IS NULL OR i.target_id=?1) ORDER BY i.last_seen DESC LIMIT 300",
+        )?;
+        let rows = stmt.query_map([target_id], |r| {
+            Ok(serde_json::json!({
+                "fingerprint": r.get::<_, String>(0)?, "targetId": r.get::<_, String>(1)?, "path": r.get::<_, Option<String>>(2)?,
+                "level": r.get::<_, String>(3)?, "sample": r.get::<_, String>(4)?, "context": r.get::<_, String>(5)?,
+                "count": r.get::<_, i64>(6)?, "firstSeen": r.get::<_, String>(7)?, "lastSeen": r.get::<_, String>(8)?,
+            }))
+        })?;
+        let out: Vec<serde_json::Value> = rows.collect::<Result<_, _>>()?;
+        Ok(out)
+    }
+
+    pub fn clear_log_issues(self: &Arc<Self>, target_id: Option<&str>) -> AppResult<usize> {
+        let n = self.db().execute("DELETE FROM log_issues WHERE (?1 IS NULL OR target_id=?1)", [target_id])?;
+        self.notify_changed();
+        Ok(n)
     }
 
     fn enqueue(self: &Arc<Self>, module_id: &str, job_type: &str, path: &Path, target: Option<&WatchTarget>) {
@@ -803,6 +983,16 @@ impl Core {
         if !fsutil::is_stable(path, Duration::from_millis(1500)) {
             return Ok("SKIPPED");
         }
+        // 사용자가 '되돌리기'한 파일(같은 내용)은 다시 옮기지 않는다.
+        let has_undone: bool = self.db().query_row("SELECT EXISTS(SELECT 1 FROM file_moves WHERE undone_at IS NOT NULL)", [], |r| r.get(0))?;
+        if has_undone {
+            let hash = fsutil::sha256_file(path)?;
+            let undone: bool = self.db().query_row(
+                "SELECT EXISTS(SELECT 1 FROM file_moves WHERE undone_at IS NOT NULL AND sha256=?1)", [&hash], |r| r.get(0))?;
+            if undone {
+                return Ok("SKIPPED");
+            }
+        }
         let (category, confident) = downloads::classify(path);
         let dir = path.parent().ok_or_else(|| AppError::invalid("경로 오류"))?;
         let name = path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
@@ -810,13 +1000,13 @@ impl Core {
         let category_label = category.unwrap_or("Unknown");
         if cfg.mode == "auto" && confident {
             if let Some(cat) = category {
-                let dest = fsutil::unique_path(&dir.join(cat), &name);
+                let dest = fsutil::unique_path(&downloads::category_dir(dir, cat), &name);
                 self.do_move(path, &dest, "download.move", "자동 분류")?;
                 return Ok("COMPLETED");
             }
         }
         // 미리보기 모드이거나 분류가 불확실하면 승인 대기
-        let proposed = dir.join(category_label).join(&name);
+        let proposed = downloads::category_dir(dir, category_label).join(&name);
         let payload = serde_json::json!({
             "path": path.to_string_lossy(),
             "proposed": proposed.to_string_lossy(),
@@ -866,7 +1056,7 @@ impl Core {
             return Err(AppError::invalid("허용되지 않은 분류 폴더입니다"));
         }
         let name = src.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
-        let dest = fsutil::unique_path(&dir.join(&cat), &name);
+        let dest = fsutil::unique_path(&downloads::category_dir(dir, &cat), &name);
         self.do_move(&src, &dest, "download.move", "승인 후 이동")?;
         db::update_job_status(&self.db(), job_id, "COMPLETED", None)?;
         self.notify_changed();
@@ -929,7 +1119,7 @@ impl Core {
                 let name = e.file_name().to_string_lossy().to_string();
                 let payload = serde_json::json!({
                     "path": p.to_string_lossy(),
-                    "proposed": dir.join(label).join(&name).to_string_lossy(),
+                    "proposed": downloads::category_dir(&dir, label).join(&name).to_string_lossy(),
                     "category": label,
                     "confident": confident,
                 });
@@ -949,6 +1139,15 @@ impl Core {
     // ---------------- watch targets ----------------
 
     pub fn add_watch_target(self: &Arc<Self>, module_id: &str, path: &str, recursive: bool) -> AppResult<String> {
+        if module_id == modules::LOGWATCH {
+            let canon = fsutil::validate_log_file(Path::new(path), &self.paths.data)?;
+            let id = db::add_watch_target(&self.db(), module_id, &canon.to_string_lossy(), false)?;
+            // 등록 시점 이후에 쌓이는 줄만 검사한다.
+            let len = std::fs::metadata(&canon).map(|m| m.len()).unwrap_or(0);
+            self.set_log_offset(&id, len)?;
+            self.apply();
+            return Ok(id);
+        }
         if module_id != modules::BACKUP && module_id != modules::DOWNLOADS {
             return Err(AppError::invalid("폴더를 등록할 수 없는 모듈입니다"));
         }
@@ -961,6 +1160,8 @@ impl Core {
 
     pub fn remove_watch_target(self: &Arc<Self>, id: &str) -> AppResult<()> {
         db::remove_watch_target(&self.db(), id)?;
+        self.db().execute("DELETE FROM log_offsets WHERE target_id=?1", [id])?;
+        self.db().execute("DELETE FROM log_issues WHERE target_id=?1", [id])?;
         self.apply();
         Ok(())
     }

@@ -18,11 +18,12 @@
 | **AutoBackup Guardian** | 등록한 폴더의 파일이 실제로 바뀌면(SHA-256 비교) 이전 버전을 보관. 버전 비교(diff)·복원 | 원본 미수정, 복원은 직접 실행, 덮어쓰기 복원 전 현재 상태 백업, 보관 개수·용량 제한 |
 | **Download Butler** | 다운로드 폴더에 새 파일이 오면 PDF/Office/Text/Images/Videos/Audio/Archives/Installers로 분류 | 기본은 미리보기(승인 후 이동), 덮어쓰기·삭제·실행 없음, 모든 이동 되돌리기 가능, 확장자-내용 불일치 시 승인 요청 |
 | **AutoPaste** | `Ctrl+Alt+Shift+V`(macOS `⌘⌥⇧V`)를 누르면 클립보드 텍스트의 줄 끝 공백·NBSP·보이지 않는 문자·중복 빈 줄 정리 | 단축키 누를 때만 읽음, 내용 저장 안 함, 코드·URL·이모지 결합 문자 보존 |
+| **LogWatcher** | 선택한 로그 파일에 새로 쌓이는 줄에서 ERROR·Exception·SEVERE를 감지해 알림. Tomcat·JEUS/WebtoB 패턴 묶음 | 같은 오류는 묶어서 횟수만 집계·재알림 간격, 스택 트레이스 보관, 로테이션·EUC-KR 대응, 로그는 외부 전송 없음 |
 | (선택) **Claude Code 다듬기** | `Ctrl+Alt+Shift+B`로 맞춤법·띄어쓰기 교정 | 기본 OFF, 외부 전송 동의 필요, 내 Claude 구독 플랜 사용(추가 요금·API 키 없음) |
 
 ## 사용 설명서
 
-스크린샷으로 단계별 사용법을 정리한 설명서(24쪽): **[PDF](docs/guide/AutoDesk_사용설명서.pdf)** · **[Word](docs/guide/AutoDesk_사용설명서.docx)**
+스크린샷으로 단계별 사용법을 정리한 설명서(28쪽): **[PDF](docs/guide/AutoDesk_사용설명서.pdf)** · **[Word](docs/guide/AutoDesk_사용설명서.docx)**
 
 | 대시보드 | 승인 센터 |
 |---|---|
@@ -168,22 +169,29 @@ npm run tauri:build
 - 업데이트 설치 검증: 실행 중인 앱 위에 새 설치본을 설치하면 기존 앱이 정상 종료되고 설정·백업은 유지
 - CI: Windows·macOS 빌드 모두 성공
 
+### 2026-11-19 — v0.2.0 LogWatcher · Windows QA
+
+- **LogWatcher 모듈 추가**: 로그 파일의 새 줄만 읽기(offset 저장), ERROR/WARN 패턴, 같은 오류 지문으로 묶기(시간·숫자·16진수 무시), 재알림 간격, 스택 트레이스(`at`, `Caused by`)를 문맥으로 보관, 미완성 줄 대기, 로테이션 감지, EUC-KR 로그 해석, Tomcat·JEUS/WebtoB 패턴 묶음
+- DB 마이그레이션 v2(`log_offsets`, `log_issues`) — v1 설치본 위에 업데이트 설치 시 기존 데이터 유지 + 이전 DB 자동 백업(`autodesk.v1.bak`) 확인
+- Windows 설치본 QA 추가 확인: AUTO 모드 자동 이동, 확장자-내용 불일치 파일 승인 대기, 제외 확장자·다운로드 중 파일 무시, 이름 충돌 `(2)`, 되돌리기·중복 되돌리기 거부, 사본/덮어쓰기 복원, 보관 개수 제한, 모듈 OFF 시 처리 차단, 잘못된 입력 거부, 창 닫기 → 트레이 상주, 백그라운드 OFF 시 창 닫기 = 종료, 두 번째 실행 시 기존 창 표시
+- QA 중 고친 것: AUTO 모드에서 되돌린 파일이 다시 옮겨질 수 있던 문제(되돌린 내용은 건너뜀), 분류 경로 구분자 혼용(`Documents/PDF\…`), 반복 오류가 스택 트레이스 문맥을 덮어쓰던 문제
+- 설명서 28쪽으로 갱신(LogWatcher 장·FAQ 추가), 테스트 Rust 38개
+
 #### 아직 확인하지 않은 것
 
 - 재부팅 후 실제 자동 시작(레지스트리 등록까지만 확인)
-- 화면 직접 조작: 트레이 메뉴 클릭, 백업 복원·비교 화면, 자동 이동(AUTO) 모드, 승인 → 이동 → 되돌리기
+- 트레이 메뉴 클릭(메뉴 동작 코드는 화면 스위치와 같은 명령 사용)
 - Claude Code 다듬기(이 PC에서 `claude` CLI를 찾지 못함 — 설치·로그인 후 확인 필요)
 - macOS 전체(`NOT_VERIFIED_ON_MACOS`) — 코드·CI 빌드만 준비
 
 #### 다음 작업
 
-1. 설치본으로 남은 Windows 수동 QA([체크리스트](docs/TESTING.md))
-2. macOS 실기기 QA(집 Mac)
-3. Claude Code CLI 설치 후 AI 다듬기 실사용 확인
-4. 후속 모듈(LogWatcher 또는 Daily Digest) 구현
+1. macOS 실기기 QA(집 Mac)
+2. Claude Code CLI 설치 후 AI 다듬기 실사용 확인
+3. 후속 모듈(Daily Work Digest 또는 Document Guard)
 
 상세: [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md)
 
 ## 로드맵(미구현 — UI에 노출하지 않음)
 
-Document Guard(문서 맞춤법·용어 검사) · LogWatcher(로그 오류 감시) · ProjectGuard(저장 시 검사) · Daily Work Digest(일일 처리 요약)
+Document Guard(문서 맞춤법·용어 검사) · ProjectGuard(저장 시 검사) · Daily Work Digest(일일 처리 요약)

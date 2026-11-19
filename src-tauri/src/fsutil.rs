@@ -164,6 +164,23 @@ pub fn validate_watch_root(path: &Path, app_data: &Path) -> AppResult<PathBuf> {
     Ok(canon)
 }
 
+/// 감시할 로그 '파일' 검증: 존재하는 일반 파일, 앱 데이터 폴더 밖.
+pub fn validate_log_file(path: &Path, app_data: &Path) -> AppResult<PathBuf> {
+    let canon = dunce_canon(path).ok_or_else(|| AppError::invalid("파일 경로를 확인할 수 없습니다"))?;
+    if !canon.is_file() {
+        return Err(AppError::invalid("로그 파일이 아니거나 존재하지 않습니다"));
+    }
+    if let Some(app) = dunce_canon(app_data) {
+        if canon.starts_with(&app) {
+            return Err(AppError::invalid("AutoDesk 자체 로그는 감시할 수 없습니다"));
+        }
+    }
+    if canon.parent().map(|p| p.components().count() < 2).unwrap_or(true) {
+        return Err(AppError::invalid("드라이브 루트의 파일은 감시할 수 없습니다"));
+    }
+    Ok(canon)
+}
+
 /// 단순 glob(`*` 와일드카드, 대소문자 무시). `dir/**` 형태는 경로 구성 요소 일치로 처리한다.
 pub fn matches_pattern(path: &Path, pattern: &str) -> bool {
     let pat = pattern.to_lowercase();

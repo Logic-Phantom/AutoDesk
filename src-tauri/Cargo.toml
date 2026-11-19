@@ -1,6 +1,6 @@
 [package]
 name = "autodesk"
-version = "0.1.0"
+version = "0.2.0"
 description = "AutoDesk — personal desktop automation engine"
 authors = ["Logic-Phantom"]
 license = "MIT"
@@ -28,6 +28,7 @@ hex = "0.4"
 uuid = { version = "1", features = ["v4"] }
 chrono = { version = "0.4", features = ["serde"] }
 similar = "2"
+encoding_rs = "0.8"
 
 [target.'cfg(any(target_os = "macos", windows, target_os = "linux"))'.dependencies]
 tauri-plugin-autostart = "2"

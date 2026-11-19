@@ -6,7 +6,7 @@ import { useAction } from '../lib/useCore';
 import { Card, Empty, Notice } from '../components/ui';
 
 const RESULTS = ['', 'completed', 'failed', 'waiting', 'cancelled', 'skipped'] as const;
-const MODULES = ['', 'backup', 'downloads', 'autopaste', 'core'] as const;
+const MODULES = ['', 'backup', 'downloads', 'autopaste', 'logwatch', 'core'] as const;
 
 export function Activity({ tick }: { tick: unknown }) {
   const [result, setResult] = useState<string>('');

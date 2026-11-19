@@ -86,6 +86,28 @@ CREATE TABLE file_moves (
   undone_at TEXT
 );
 "#,
+), (
+    2,
+    r#"
+CREATE TABLE log_offsets (
+  target_id TEXT PRIMARY KEY,
+  offset INTEGER NOT NULL,
+  updated_at TEXT NOT NULL
+);
+CREATE TABLE log_issues (
+  fingerprint TEXT NOT NULL,
+  target_id TEXT NOT NULL,
+  level TEXT NOT NULL,
+  sample TEXT NOT NULL,
+  context TEXT NOT NULL,
+  count INTEGER NOT NULL,
+  first_seen TEXT NOT NULL,
+  last_seen TEXT NOT NULL,
+  last_notified TEXT,
+  PRIMARY KEY (fingerprint, target_id)
+);
+CREATE INDEX idx_log_issues_last ON log_issues(last_seen);
+"#,
 )];
 
 pub fn now() -> String {

@@ -30,7 +30,7 @@ export interface ActivityRow {
 }
 
 export interface ModuleView {
-  id: 'backup' | 'downloads' | 'autopaste';
+  id: 'backup' | 'downloads' | 'autopaste' | 'logwatch';
   name: string;
   description: string;
   enabled: boolean;
@@ -98,6 +98,18 @@ export type DiffResult =
   | { kind: 'Text'; diff: string; identical: boolean }
   | { kind: 'Binary'; snapshotSize: number; snapshotHash: string; currentSize: number | null; currentHash: string | null };
 
+export interface LogIssue {
+  fingerprint: string;
+  targetId: string;
+  path: string | null;
+  level: 'ERROR' | 'WARN';
+  sample: string;
+  context: string;
+  count: number;
+  firstSeen: string;
+  lastSeen: string;
+}
+
 export interface ClaudeStatus {
   available: boolean;
   path: string | null;
@@ -147,6 +159,8 @@ export const api = {
   restoreVersion: (id: string, mode: 'copy' | 'overwrite') => invoke<string>('restore_version', { id, mode }),
   getSettings: () => invoke<{ notificationsEnabled: boolean; firstRunCompleted: boolean }>('get_settings'),
   setSetting: (key: string, value: unknown) => invoke<void>('set_setting', { key, value }),
+  listLogIssues: (targetId?: string) => invoke<LogIssue[]>('list_log_issues', { targetId }),
+  clearLogIssues: (targetId?: string) => invoke<number>('clear_log_issues', { targetId }),
   aiStatus: () => invoke<ClaudeStatus>('ai_status'),
   uninstallPreview: () => invoke<UninstallPreview>('uninstall_preview'),
   uninstallExecute: (keepBackups: boolean, confirm: string) =>

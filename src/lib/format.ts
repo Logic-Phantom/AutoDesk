@@ -37,6 +37,7 @@ export const MODULE_NAME: Record<string, string> = {
   backup: 'AutoBackup',
   downloads: 'Download Butler',
   autopaste: 'AutoPaste',
+  logwatch: 'LogWatcher',
   core: '시스템',
 };
 

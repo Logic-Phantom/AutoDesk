@@ -7,6 +7,7 @@ import { Notice, Pill, Toggle } from '../components/ui';
 import { BackupPanel } from './BackupPanel';
 import { DownloadsPanel } from './DownloadsPanel';
 import { AutoPastePanel } from './AutoPastePanel';
+import { LogWatchPanel } from './LogWatchPanel';
 
 function ModuleCard({ m, data }: { m: ModuleView; data: Overview }) {
   const [open, setOpen] = useState(m.status === 'WAITING_PERMISSION');
@@ -33,6 +34,7 @@ function ModuleCard({ m, data }: { m: ModuleView; data: Overview }) {
           {m.id === 'backup' && <BackupPanel m={m} />}
           {m.id === 'downloads' && <DownloadsPanel m={m} data={data} />}
           {m.id === 'autopaste' && <AutoPastePanel m={m} data={data} />}
+          {m.id === 'logwatch' && <LogWatchPanel m={m} tick={data} />}
         </div>
       )}
     </section>
@@ -55,7 +57,7 @@ export function Automations({ data }: { data: Overview }) {
         <ModuleCard key={m.id} m={m} data={data} />
       ))}
       <p className="muted small">
-        향후 모듈(Document Guard, LogWatcher, ProjectGuard, Daily Digest)은 아직 구현되지 않아 여기에 표시하지 않습니다. 로드맵은 README를 참고하세요.
+        향후 모듈(Document Guard, ProjectGuard, Daily Digest)은 아직 구현되지 않아 여기에 표시하지 않습니다. 로드맵은 README를 참고하세요.
       </p>
     </div>
   );

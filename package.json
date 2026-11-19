@@ -1,7 +1,7 @@
 {
   "name": "autodesk",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "AutoDesk — 개인용 PC 상주 자동화 엔진 (Tauri 2 + React + Rust)",
   "license": "MIT",

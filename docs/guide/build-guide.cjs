@@ -101,7 +101,7 @@ body.push(
   new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ type: 'png', data: fs.readFileSync('C:/eclipse_AI/AutoDesk/src-tauri/icons/128x128.png'), transformation: { width: 96, height: 96 }, altText: { title: 'AutoDesk', description: 'AutoDesk 아이콘', name: 'icon' } })] }),
   new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 240, after: 120 }, children: [t('AutoDesk 사용 설명서', { bold: true, size: 56 })] }),
   new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 600 }, children: [t('내 PC에 상주하며 반복 작업을 조용히 처리하는 개인용 자동화 앱', { size: 24, color: '646B75' })] }),
-  new Paragraph({ alignment: AlignmentType.CENTER, children: [t('버전 0.1.0 · 2026년 11월 19일', { size: 20, color: '646B75' })] }),
+  new Paragraph({ alignment: AlignmentType.CENTER, children: [t('버전 0.2.0 · 2026년 11월 19일', { size: 20, color: '646B75' })] }),
   new Paragraph({ alignment: AlignmentType.CENTER, children: [t('Windows 10/11 · macOS 11 이상', { size: 20, color: '646B75' })] }),
   new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 1800 }, children: [t('github.com/Logic-Phantom/AutoDesk', { size: 18, color: ACCENT })] }),
 );
@@ -119,6 +119,7 @@ body.push(table(['기능', '하는 일', '언제 동작하나'], [
   ['**AutoBackup Guardian**', '등록한 폴더의 파일 내용이 바뀌면 이전 버전을 보관합니다. 언제든 비교하고 되살릴 수 있습니다.', '파일을 저장할 때마다 자동'],
   ['**Download Butler**', '다운로드 폴더에 새 파일이 들어오면 PDF·오피스·이미지·영상 등 종류별 폴더로 정리합니다.', '새 파일이 들어올 때(기본은 승인 후 이동)'],
   ['**AutoPaste**', '복사한 텍스트의 줄 끝 공백, 보이지 않는 문자, 중복 빈 줄을 정리합니다.', '단축키 `Ctrl + Alt + Shift + V`를 누를 때만'],
+  ['**LogWatcher**', '선택한 로그 파일에 새로 쌓이는 줄에서 ERROR·Exception을 찾아, 같은 오류는 묶어서 알립니다.', '로그에 줄이 추가될 때마다 자동'],
   ['Claude Code 다듬기(선택)', '복사한 글의 맞춤법·띄어쓰기를 Claude로 교정합니다.', '직접 켠 뒤 `Ctrl + Alt + Shift + B`를 누를 때만'],
 ], [2300, 4426, 2300]));
 body.push(gap());
@@ -134,7 +135,7 @@ body.push(...bullets([
 body.push(H1('2. 설치하기'));
 body.push(H2('Windows'));
 body.push(...steps([
-  'GitHub 저장소의 **Releases** 또는 **Actions** 탭에서 `AutoDesk_0.1.0_x64-setup.exe`를 내려받습니다.',
+  'GitHub 저장소의 **Releases** 또는 **Actions** 탭에서 `AutoDesk_<버전>_x64-setup.exe`를 내려받습니다.',
   '파일을 더블클릭합니다. 서명하지 않은 개인용 프로그램이라 **"Windows의 PC 보호"** 창이 뜨면 **추가 정보 → 실행**을 누릅니다.',
   '설치는 현재 사용자 계정에만 되며(`%LOCALAPPDATA%\\AutoDesk`) 관리자 권한을 묻지 않습니다.',
   '설치가 끝나면 시작 메뉴의 **AutoDesk**로 실행합니다. 작업 표시줄 오른쪽 트레이에 아이콘이 생깁니다.',
@@ -142,7 +143,7 @@ body.push(...steps([
 body.push(...TIP(['이미 설치된 상태에서 새 버전 설치 파일을 실행하면, 실행 중인 AutoDesk를 자동으로 정상 종료한 뒤 업데이트합니다. 설정과 백업은 그대로 유지됩니다.']));
 body.push(H2('macOS'));
 body.push(...steps([
-  '`AutoDesk_0.1.0_aarch64.dmg`를 열어 **AutoDesk.app**을 응용 프로그램 폴더로 끌어 놓습니다.',
+  '`AutoDesk_<버전>_aarch64.dmg`를 열어 **AutoDesk.app**을 응용 프로그램 폴더로 끌어 놓습니다.',
   '처음 실행 시 "확인되지 않은 개발자" 경고가 뜨면 Finder에서 앱을 **우클릭 → 열기**를 누릅니다.',
   '알림, 다운로드 폴더 접근, 단축키(손쉬운 사용) 권한을 물으면 허용합니다. 거부하면 해당 기능만 "설정 필요" 상태가 되고 나머지는 계속 동작합니다.',
 ]));
@@ -311,15 +312,43 @@ body.push(...WARN([
   '원문과 결과는 AutoDesk 로그·DB에 저장되지 않습니다. 결과가 비었거나 지나치게 길면 적용하지 않고 원문을 유지합니다.',
 ]));
 
-// 8. 이력
-body.push(H1('8. 이력 — 무엇을 했는지 확인'));
+// 8. LogWatcher
+body.push(H1('8. LogWatcher — 로그 오류 감시'));
+body.push(P('서버나 개발 도구가 남기는 로그 파일을 등록해 두면, 새로 쌓이는 줄에서 **ERROR·Exception·SEVERE** 같은 문구를 찾아 알려 줍니다. 로그는 PC 안에서만 분석하고 밖으로 보내지 않습니다.'));
+body.push(H2('로그 파일 등록하기'));
+body.push(...steps([
+  '**자동화** 화면에서 **LogWatcher**를 펼치고 **로그 파일 추가**를 누릅니다.',
+  '감시할 파일(예: `catalina.out`, `server.log`, `JeusServer.log`)을 고릅니다. 폴더가 아니라 **파일**을 고릅니다.',
+  '등록한 **뒤에** 쌓이는 줄만 검사합니다. 이미 있던 내용은 오류로 세지 않습니다.',
+  '서버가 사용하는 로그 종류에 맞춰 **패턴 묶음**(일반 · Tomcat · JEUS/WebtoB)을 누르면 감지 문구가 한 번에 바뀝니다.',
+]));
+body.push(...image('13-logwatch.png', '그림 9. LogWatcher — 로그 파일과 감지 규칙'));
+body.push(H2('어떻게 감지하나'));
+body.push(table(['상황', '동작'], [
+  ['ERROR·FATAL·SEVERE·Exception', '오류로 기록하고 알림'],
+  ['WARN·WARNING', '경고로 기록(알림은 "경고도 알림"을 켰을 때만)'],
+  ['같은 오류가 반복', '시간·숫자·ID만 다른 같은 오류는 하나로 묶어 **횟수**만 늘림. 다시 알림은 설정한 간격(기본 30분)이 지난 뒤에만'],
+  ['스택 트레이스', '`at …`, `Caused by:` 줄은 따로 세지 않고 앞 오류의 **문맥**으로 붙여 보관'],
+  ['줄이 아직 덜 써짐', '줄바꿈이 올 때까지 기다렸다가 읽음'],
+  ['로그 파일이 새로 시작(로테이션)', '파일이 작아진 것을 감지해 처음부터 다시 읽음'],
+  ['한글 로그', 'UTF-8과 EUC-KR(국내 WAS 기본) 모두 읽음'],
+  ['LogWatcher를 껐다 켬', '꺼져 있던 동안 쌓인 줄도 이어서 검사(놓치지 않음)'],
+], [3000, 6026]));
+body.push(gap());
+body.push(H2('감지된 오류 확인하기'));
+body.push(P('패널 아래 **감지된 오류** 목록에 종류별로 횟수, 처음·최근 발생 시각, 파일 이름이 나옵니다. 항목을 누르면 오류 앞뒤 줄과 스택 트레이스가 펼쳐집니다(▶ 표시가 오류 줄). 확인이 끝나면 **확인함 — 목록 비우기**를 누르세요. 새 알림은 이력 화면에도 남습니다.'));
+body.push(...image('14-logwatch-issues.png', '그림 10. 감지된 오류 — 같은 오류는 횟수로 묶이고 스택 트레이스를 함께 보관'));
+body.push(...TIP(['오탐이 많으면 **대소문자 구분**을 켠 상태로 두고, 오류 문구를 서버 로그 형식에 맞게 좁히세요(예: `[ERROR]`). 문구는 쉼표로 구분해 입력하고 **패턴 저장**을 누릅니다.']))
+
+// 9. 이력
+body.push(H1('9. 이력 — 무엇을 했는지 확인'));
 body.push(P('AutoDesk가 실제로 처리한 일만 기록됩니다. 결과(완료·실패·승인 대기·취소·건너뜀)와 기능별로 걸러 볼 수 있고, 파일 이동은 여기서 **되돌리기**할 수 있습니다. 클립보드 내용은 기록하지 않고 "3곳 정리"처럼 건수만 남깁니다.'));
-body.push(...image('09-activity.png', '그림 9. 이력 — 결과·모듈 필터와 되돌리기 버튼'));
+body.push(...image('09-activity.png', '그림 11. 이력 — 결과·모듈 필터와 되돌리기 버튼'));
 body.push(...TIP(['실패 항목 옆 괄호 안의 코드(예: `PERMISSION_DENIED`)가 원인입니다. 대부분 다른 프로그램이 파일을 쓰고 있거나 폴더 권한이 없는 경우로, 잠시 후 다시 저장하면 처리됩니다.']));
 
 // 9. 설정
-body.push(H1('9. 설정'));
-body.push(...image('10-settings.png', '그림 10. 설정 — 실행 방식, 알림, 테마'));
+body.push(H1('10. 설정'));
+body.push(...image('10-settings.png', '그림 12. 설정 — 실행 방식, 알림, 테마'));
 body.push(table(['항목', '설명'], [
   ['백그라운드 상주', '켜면 창을 닫아도 트레이에서 계속 실행. 처음 창을 닫을 때 "계속 실행 중" 알림이 한 번 뜹니다.'],
   ['로그인 시 자동 실행', 'PC에 로그인하면 창 없이 트레이로 시작. 표시는 항상 윈도우의 실제 등록 상태입니다.'],
@@ -330,10 +359,10 @@ body.push(table(['항목', '설명'], [
   ['앱 데이터 위치', '설정·DB·백업·로그가 저장되는 단 하나의 폴더.'],
 ], [2600, 6426]));
 body.push(gap());
-body.push(...image('12-dashboard-dark.png', '그림 11. 다크 테마'));
+body.push(...image('12-dashboard-dark.png', '그림 13. 다크 테마'));
 
 // 10. 제거
-body.push(H1('10. 완전히 제거하기'));
+body.push(H1('11. 완전히 제거하기'));
 body.push(P('AutoDesk가 PC에 남기는 것은 **로그인 자동 실행 등록 1개**와 **앱 데이터 폴더**뿐이고, 둘 다 깨끗하게 지울 수 있습니다.'));
 body.push(H2('방법 1 (권장): 앱 안에서 완전 제거'));
 body.push(...steps([
@@ -342,7 +371,7 @@ body.push(...steps([
   '입력 칸에 **제거**라고 입력하고 **지금 완전 제거**를 누릅니다.',
   'AutoDesk가 종료되고 잠시 뒤 결과 보고서(메모장)가 열립니다. 실패한 항목이 있으면 보고서에 표시됩니다.',
 ]));
-body.push(...image('11-uninstall.png', '그림 12. 완전 제거 — 삭제 대상과 용량을 확인한 뒤 실행'));
+body.push(...image('11-uninstall.png', '그림 14. 완전 제거 — 삭제 대상과 용량을 확인한 뒤 실행'));
 body.push(table(['지우는 것', '지우지 않는 것'], [
   ['실행 중인 AutoDesk와 트레이 아이콘', '감시 폴더 안의 원본 파일'],
   ['로그인 자동 실행 등록', '다운로드 폴더와 분류된 파일'],
@@ -355,7 +384,7 @@ body.push(P('**설정 → 앱 → 설치된 앱 → AutoDesk → 제거**로도 
 body.push(...WARN(['macOS에서 앱을 Finder로 휴지통에 버리기만 하면 자동 실행 등록과 데이터가 남습니다. macOS에서는 반드시 **앱 안의 완전 제거**를 사용하세요.']));
 
 // 11. FAQ
-body.push(H1('11. 자주 묻는 질문'));
+body.push(H1('12. 자주 묻는 질문'));
 const faq = [
   ['백그라운드에서 몰래 계속 도는 건 아닌가요?', '프로세스는 `AutoDesk.exe` 하나뿐입니다. 트레이의 "프로그램 종료"나 백그라운드 상주를 끈 뒤 창을 닫으면 완전히 꺼지고, 작업 관리자에도 남지 않습니다. 서비스나 예약 작업을 설치하지 않습니다.'],
   ['PC가 느려지지 않나요?', '파일 변경을 OS 이벤트로만 받아 처리하므로 평소엔 거의 쉬고 있습니다(측정 시 메모리 약 34MB). 큰 파일은 크기 제한으로 건너뜁니다.'],
@@ -363,20 +392,21 @@ const faq = [
   ['다운로드한 파일이 그대로 있어요.', '기본은 미리보기 모드라 승인 센터에서 "이동"을 눌러야 옮겨집니다. 바로 옮기려면 자동 이동(AUTO)을 켜세요.'],
   ['단축키를 눌러도 반응이 없어요.', '다른 프로그램이 같은 단축키를 쓰는지 확인하고 AutoPaste 패널에서 단축키를 바꾸세요. 이미지나 파일을 복사한 경우는 건드리지 않습니다.'],
   ['"오류로 정지"가 떴어요.', '같은 기능이 5번 연속 실패하면 그 기능만 멈춥니다. 이력에서 오류 코드를 확인하고 원인을 해결한 뒤 스위치를 껐다 켜세요.'],
+  ['로그 알림이 너무 많아요.', 'LogWatcher의 "같은 오류 다시 알림 간격"을 늘리거나, 오류 문구를 서버 형식에 맞게 좁히세요(예: `ERROR` 대신 `[ERROR]`). 경고 알림은 기본으로 꺼져 있습니다.'],
   ['인터넷이 끊겨도 되나요?', '네. AI 다듬기를 제외한 모든 기능이 오프라인에서 동작합니다.'],
   ['데이터는 어디에 저장되나요?', '`%APPDATA%\\io.github.logicphantom.autodesk` 한 곳입니다(설정 → 앱 데이터 위치). 백업, DB, 로그가 모두 여기에 있습니다.'],
 ];
 body.push(table(['질문', '답'], faq, [3000, 6026]));
 body.push(gap());
 body.push(H2('이 설명서의 화면'));
-body.push(P('이 설명서의 스크린샷은 Windows 11에서 실제 설치본(v0.1.0)을 예제 폴더(`C:\\AutoDesk-Demo`)로 실행해 찍었습니다. 사용자 이름은 `user`로 가렸습니다.'));
+body.push(P('이 설명서의 스크린샷은 Windows 11에서 실제 설치본(v0.2.0)을 예제 폴더(`C:\\AutoDesk-Demo`)로 실행해 찍었습니다. 사용자 이름은 `user`로 가렸습니다.'));
 
 // ---------- document ----------
 const doc = new Document({
   creator: 'Logic-Phantom',
   lastModifiedBy: 'Logic-Phantom',
   title: 'AutoDesk 사용 설명서',
-  description: 'AutoDesk v0.1.0 사용 설명서',
+  description: 'AutoDesk v0.2.0 사용 설명서',
   features: { updateFields: true },
   styles: {
     default: { document: { run: { font: FONT, size: 21 } } },
