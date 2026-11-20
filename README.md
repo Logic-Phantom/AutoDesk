@@ -284,22 +284,38 @@ AutoDesk 본체는 30~45MB이고 나머지는 WebView2(Edge) 프로세스다. �
 - Windows 설치본 확인: 실제 활동 4건(백업 2·다운로드 정리 1·클립보드 1) 집계, MD/HTML 저장, 잘못된 시각(25:99) 거부, 알림 시각이 지난 뒤 1분 안에 한 번 발송·같은 날 재발송 없음(`digest_last_sent`)
 - 테스트: Rust 48개(실제 OCR 포함) · Vitest 28개
 
-#### 아직 확인하지 않은 것
+## 앞으로 할 일
 
-- 재부팅 후 실제 자동 시작(레지스트리 등록까지만 확인)
-- 자리 비움의 실제 화면 잠금·모니터 끄기, 퇴근 후 PC 종료 예약(사용 중인 PC라 실행하지 않음)
-- 여러 모니터·고배율(125%·150%) 환경의 영역 캡처 좌표(이 PC는 1920×1080 한 대·100%라 확인 불가. 계산은 물리 픽셀 기준으로 맞춰 둠)
-- Claude Code 다듬기(이 PC에서 `claude` CLI를 찾지 못함)
-- macOS 전체(`NOT_VERIFIED_ON_MACOS`) — 코드·CI 빌드와 CI의 실제 OCR 테스트만 확인
+현재 버전: **v0.4.1** ([Releases](https://github.com/Logic-Phantom/AutoDesk/releases/tag/v0.4.1) — Windows 설치 파일, Apple Silicon Mac용 .dmg). 상세 검증 현황은 [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md).
 
-#### 다음 작업
+### 1. 실제 환경에서 확인(코드는 준비됨, 이 PC에서는 확인 불가)
 
-1. 집 Mac에서 실기기 QA(트레이·업무 모드·캡처 권한·OCR)
-2. 여러 모니터·고배율 장비에서 영역 캡처 실사용 확인
-3. 후속 모듈 선택(Document Guard·ProjectGuard는 외부 엔진·스크립트 실행이 필요해 사용자 결정 후)
+| 항목 | 지금 상태 | 확인할 것 |
+|---|---|---|
+| macOS 전체 (`NOT_VERIFIED_ON_MACOS`) | CI 빌드·실제 OCR 테스트만 통과 | 집 Mac에서 설치 → 트레이, 업무 모드 버튼, 화면 기록·손쉬운 사용 권한, 캡처·OCR, 자동 시작, 완전 제거 |
+| 여러 모니터·고배율(125~200%) 영역 캡처 | 좌표 변환 단위 테스트로만 확인 | 실제 장비에서 영역 드래그 위치가 정확한지 |
+| 자리 비움·퇴근의 실제 동작 | 명령 호출까지만 확인 | 화면 잠금, 모니터 끄기, PC 종료 예약·취소 |
+| 재부팅 후 자동 시작 | 레지스트리 등록까지만 확인 | 재부팅 뒤 트레이로 조용히 시작되는지 |
+| 클립보드 정리의 Claude Code 다듬기 | 이 PC에 `claude` CLI 없음 | CLI 설치·로그인 후 단축키로 다듬기 |
 
-상세: [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md)
+### 2. 개선 후보(작음)
 
-## 로드맵(미구현 — UI에 노출하지 않음)
+- **Intel Mac용 설치 파일**: 지금 릴리스는 Apple Silicon(.dmg aarch64)만. CI에 `x86_64-apple-darwin` 빌드 추가
+- **릴리스 노트 자동화**: 지금은 고정 문구. README 작업 내역의 해당 버전 항목을 릴리스 본문으로 넣기
+- **macOS 퇴근 후 PC 종료 예약**: 지금은 Windows만 지원(macOS는 종료 방식·권한 확인 후 추가)
+- **이미지 변환의 WebP 손실 압축**: 지금은 무손실만(C 라이브러리 필요). 무료 순수 Rust 인코더가 생기면 검토
 
-Document Guard(문서 맞춤법·용어 검사) · ProjectGuard(저장 시 검사)
+### 3. 새 기능 후보(만들지 여부 결정 필요)
+
+| 이름 | 하는 일 | 결정할 점 |
+|---|---|---|
+| **문서 검사** (구 Document Guard) | 문서의 맞춤법·사내 용어·금칙어 검사 | 한국어 맞춤법은 무료 로컬 엔진이 마땅치 않음 → 용어·금칙어 사전 검사만 할지, Claude Code CLI(선택·동의)를 쓸지 |
+| **저장 시 검사** (구 ProjectGuard) | 프로젝트 파일을 저장하면 정해 둔 검사 명령(lint·test 등) 실행 후 결과 알림 | 사용자가 등록한 스크립트를 자동 실행하는 기능이라 안전장치(폴더·명령 화이트리스트, 기본 OFF) 설계 필요 |
+
+### 하지 않는 것(무료·개인용 원칙)
+
+- 코드 서명(인증서·Apple Developer 비용), 자동 업데이트 서버, 유료 API·텔레메트리
+
+### 릴리스 방법
+
+버전을 `package.json`·`src-tauri/tauri.conf.json`·`src-tauri/Cargo.toml`에서 올리고 커밋 → `git tag vX.Y.Z && git push origin vX.Y.Z` → CI가 Windows·macOS 설치 파일을 만들어 Releases에 자동 첨부.
