@@ -34,14 +34,15 @@
 
 | 도구 | 하는 일 | 특징 |
 |---|---|---|
-| **Capture Studio** | 영역·전체·창 캡처(`Ctrl+Alt+Shift+S`) → 화살표·사각형·원·형광펜·번호·텍스트·모자이크·자르기·크기 변경 → 복사·PNG/JPG 저장, **OCR 글자 추출** | 캡처는 메모리에만(저장 전 디스크에 남지 않음), OCR은 Windows 내장 엔진으로 로컬 처리(작은 글씨 자동 2배 확대) |
+| **Capture Studio** | 영역·전체·창 캡처(`Ctrl+Alt+Shift+S`) → 화살표·사각형·원·형광펜·번호·텍스트·모자이크·자르기·크기 변경 → 복사·PNG/JPG 저장, **OCR 글자 추출** | 캡처는 메모리에만(저장 전 디스크에 남지 않음), OCR은 OS 내장 엔진(Windows OCR / macOS Vision)으로 로컬 처리(작은 글씨 자동 2배 확대) |
 | **Table Converter** | 엑셀·웹 표·CSV·TSV·JSON·Markdown을 자동 감지해 Markdown·HTML·CSV·엑셀용 CSV(BOM)·TSV·JSON으로 변환, 열/행 선택, 미리보기 | 엑셀/웹에서 복사한 서식 표(병합 셀)까지 해석, 앞자리 0 코드값 보존 |
 | **Compare Desk** | 두 문서(TXT·MD·DOCX 등)를 줄·단어·글자 단위로 비교, CSV는 기준 열로 행 매칭, 변경점 복사·HTML 리포트 | 삭제·수정이 섞여도 비슷한 줄끼리 최적으로 짝지음, UTF-8/EUC-KR 자동 |
+| **일일 요약** | AutoDesk가 그날 실제로 처리한 일(백업·정리·클립보드·업무 모드·실패)을 집계, Markdown 복사·MD/HTML 저장, 정한 시각에 하루 한 번 알림(선택) | 자체 처리 기록만 집계(PC 활동 추적 없음), 알림 기본 OFF |
 | **Image Studio** | 여러 이미지를 JPG·PNG·WEBP로 일괄 변환, 맞추기·자르기·비율 리사이즈, **목표 용량(KB) 자동 맞춤**, 전후 용량 비교, 드래그 앤 드롭 | 원본 보존(별도 폴더), 이름 충돌 시 `(2)`, EXIF 회전 반영 |
 
 ## 사용 설명서
 
-스크린샷으로 단계별 사용법을 정리한 설명서(36쪽): **[PDF](docs/guide/AutoDesk_사용설명서.pdf)** · **[Word](docs/guide/AutoDesk_사용설명서.docx)**
+스크린샷으로 단계별 사용법을 정리한 설명서(37쪽): **[PDF](docs/guide/AutoDesk_사용설명서.pdf)** · **[Word](docs/guide/AutoDesk_사용설명서.docx)**
 
 | 대시보드 | 승인 센터 |
 |---|---|
@@ -266,22 +267,31 @@ v0.3.0 코드를 다시 점검하고 설치본에서 고친 것:
 
 AutoDesk 본체는 30~45MB이고 나머지는 WebView2(Edge) 프로세스다. 플로팅 버튼을 끄면 WebView 하나가 더 줄어든다.
 
+### 2026-11-20 — v0.4.0 일일 요약 · macOS OCR · 캡처 좌표 검증
+
+- **Daily Work Digest(일일 요약)** 추가: 그날 AutoDesk가 실제로 처리한 일만 집계(백업 파일·버전 수, 다운로드 정리·제안, 클립보드 정리, 업무 모드, 실패 목록, 확인 대기), Markdown 복사·MD/HTML 저장, 날짜 이동, 정한 시각 이후 하루 한 번 OS 알림(기본 OFF, 빈 날 건너뛰기)
+- **macOS OCR**: macOS 내장 Vision 프레임워크를 기본 `osascript`(JavaScript for Automation)로 호출 — 추가 라이브러리 없음, 이미지는 임시 파일로 넘기고 즉시 삭제. 한국어는 macOS 13+
+- **실제 OCR 테스트**: 설명서 스크린샷을 OS OCR로 읽어 "Capture Studio"가 나오는지 확인하는 테스트를 Windows·macOS CI에서 실행
+- **고배율·여러 모니터 영역 캡처**: 좌표 변환을 함수로 분리하고 100·125·150·175·200% 배율, 역방향 드래그, 클릭만 한 경우를 테스트(실제 다중 모니터·고배율 장비는 없어 코드·테스트로 확인)
+- Windows 설치본 확인: 실제 활동 4건(백업 2·다운로드 정리 1·클립보드 1) 집계, MD/HTML 저장, 잘못된 시각(25:99) 거부, 알림 시각이 지난 뒤 1분 안에 한 번 발송·같은 날 재발송 없음(`digest_last_sent`)
+- 테스트: Rust 48개(실제 OCR 포함) · Vitest 28개
+
 #### 아직 확인하지 않은 것
 
 - 재부팅 후 실제 자동 시작(레지스트리 등록까지만 확인)
 - 자리 비움의 실제 화면 잠금·모니터 끄기, 퇴근 후 PC 종료 예약(사용 중인 PC라 실행하지 않음)
 - 여러 모니터·고배율(125%·150%) 환경의 영역 캡처 좌표(이 PC는 1920×1080 한 대·100%라 확인 불가. 계산은 물리 픽셀 기준으로 맞춰 둠)
 - Claude Code 다듬기(이 PC에서 `claude` CLI를 찾지 못함)
-- macOS 전체(`NOT_VERIFIED_ON_MACOS`) — 코드·CI 빌드만 준비, macOS OCR 미지원
+- macOS 전체(`NOT_VERIFIED_ON_MACOS`) — 코드·CI 빌드와 CI의 실제 OCR 테스트만 확인
 
 #### 다음 작업
 
-1. 여러 모니터·고배율 환경에서 영역 캡처 확인
-2. macOS 실기기 QA(집 Mac), macOS OCR(Vision) 연동
-3. 후속 모듈(Daily Work Digest 또는 Document Guard)
+1. 집 Mac에서 실기기 QA(트레이·업무 모드·캡처 권한·OCR)
+2. 여러 모니터·고배율 장비에서 영역 캡처 실사용 확인
+3. 후속 모듈 선택(Document Guard·ProjectGuard는 외부 엔진·스크립트 실행이 필요해 사용자 결정 후)
 
 상세: [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md)
 
 ## 로드맵(미구현 — UI에 노출하지 않음)
 
-Document Guard(문서 맞춤법·용어 검사) · ProjectGuard(저장 시 검사) · Daily Work Digest(일일 처리 요약)
+Document Guard(문서 맞춤법·용어 검사) · ProjectGuard(저장 시 검사)

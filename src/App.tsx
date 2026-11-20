@@ -1,5 +1,5 @@
 import { listen } from '@tauri-apps/api/event';
-import { Bot, Camera, Columns2, History, Images, Inbox, LayoutDashboard, Settings as SettingsIcon, Sunrise, Table2 } from 'lucide-react';
+import { Bot, Camera, CalendarCheck, Columns2, History, Images, Inbox, LayoutDashboard, Settings as SettingsIcon, Sunrise, Table2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { APP_STATUS_LABEL } from './lib/format';
 import { useOverview } from './lib/useCore';
@@ -9,6 +9,7 @@ import { Activity } from './pages/Activity';
 import { Approvals } from './pages/Approvals';
 import { Settings, type Theme } from './pages/Settings';
 import { Workspace } from './pages/Workspace';
+import { Digest } from './pages/Digest';
 import { CaptureStudio } from './pages/tools/CaptureStudio';
 import { TableConverter } from './pages/tools/TableConverter';
 import { CompareDesk } from './pages/tools/CompareDesk';
@@ -19,6 +20,7 @@ const NAV = [
   { id: 'automations', label: '자동화', icon: Bot, group: '' },
   { id: 'activity', label: '이력', icon: History, group: '' },
   { id: 'approvals', label: '승인 센터', icon: Inbox, group: '' },
+  { id: 'digest', label: '일일 요약', icon: CalendarCheck, group: '' },
   { id: 'workspace', label: '업무 모드', icon: Sunrise, group: '' },
   { id: 'capture', label: 'Capture Studio', icon: Camera, group: '도구' },
   { id: 'table', label: 'Table Converter', icon: Table2, group: '도구' },
@@ -104,6 +106,7 @@ export default function App() {
         {page === 'activity' && <Activity tick={data} />}
         {page === 'approvals' && <Approvals tick={data} />}
         {page === 'workspace' && <Workspace />}
+        {page === 'digest' && <Digest tick={data} />}
         {page === 'capture' && <CaptureStudio platform={data.platform} />}
         {/* 도구 화면은 다른 메뉴로 가도 입력이 사라지지 않도록 숨김 처리만 한다 */}
         <div hidden={page !== 'table'}><TableConverter /></div>

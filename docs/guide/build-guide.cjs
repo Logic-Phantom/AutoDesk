@@ -110,7 +110,7 @@ body.push(
   new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ type: 'png', data: fs.readFileSync('C:/eclipse_AI/AutoDesk/src-tauri/icons/128x128.png'), transformation: { width: 96, height: 96 }, altText: { title: 'AutoDesk', description: 'AutoDesk 아이콘', name: 'icon' } })] }),
   new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 240, after: 120 }, children: [t('AutoDesk 사용 설명서', { bold: true, size: 56 })] }),
   new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 600 }, children: [t('내 PC에 상주하며 반복 작업을 조용히 처리하는 개인용 자동화 앱', { size: 24, color: '646B75' })] }),
-  new Paragraph({ alignment: AlignmentType.CENTER, children: [t('버전 0.3.1 · 2026년 11월 20일', { size: 20, color: '646B75' })] }),
+  new Paragraph({ alignment: AlignmentType.CENTER, children: [t('버전 0.4.0 · 2026년 11월 20일', { size: 20, color: '646B75' })] }),
   new Paragraph({ alignment: AlignmentType.CENTER, children: [t('Windows 10/11 · macOS 11 이상', { size: 20, color: '646B75' })] }),
   new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 1800 }, children: [t('github.com/Logic-Phantom/AutoDesk', { size: 18, color: ACCENT })] }),
 );
@@ -168,7 +168,7 @@ body.push(...WARN(['macOS 버전은 아직 실기기에서 검증하지 않았�
 
 // 3. 화면 구성
 body.push(H1('3. 화면 둘러보기'));
-body.push(P('왼쪽 메뉴 위쪽은 **대시보드 · 자동화 · 이력 · 승인 센터 · 업무 모드**, 아래 **도구** 묶음은 **Capture Studio · Table Converter · Compare Desk · Image Studio**, 맨 아래가 **설정**입니다. 승인 센터 옆 숫자는 확인을 기다리는 작업 수, 왼쪽 아래 점은 현재 상태(초록 = 실행 중)입니다.'));
+body.push(P('왼쪽 메뉴 위쪽은 **대시보드 · 자동화 · 이력 · 승인 센터 · 일일 요약 · 업무 모드**, 아래 **도구** 묶음은 **Capture Studio · Table Converter · Compare Desk · Image Studio**, 맨 아래가 **설정**입니다. 승인 센터 옆 숫자는 확인을 기다리는 작업 수, 왼쪽 아래 점은 현재 상태(초록 = 실행 중)입니다.'));
 body.push(...image('01-dashboard.png', '그림 1. 대시보드 — 전체 상태를 한눈에 확인'));
 body.push(table(['영역', '의미'], [
   ['전체 자동화 스위치', '끄면 모든 감시와 단축키가 즉시 멈춥니다. 설정과 대기 작업은 그대로 남습니다.'],
@@ -380,8 +380,8 @@ body.push(table(['도구', '단축키', '설명'], [
 ], [2600, 2000, 4426]));
 body.push(gap());
 body.push(H2('글자 추출(OCR)'));
-body.push(P('편집기의 **글자 추출**을 누르면 이미지 속 글자를 텍스트로 바꿔 오른쪽에 보여줍니다. **Windows에 내장된 OCR 엔진**을 써서 인터넷 없이 PC 안에서 처리하고, 작은 글씨는 자동으로 2배 확대해 인식합니다. 자르기로 영역을 좁히면 더 정확합니다.'));
-body.push(...TIP(['한국어가 인식되지 않으면 Windows 설정 → 시간 및 언어 → 언어 및 지역 → 한국어 → 언어 옵션에서 ‘광학 문자 인식’이 설치되어 있는지 확인하세요. macOS에서는 아직 OCR을 지원하지 않습니다.']));
+body.push(P('편집기의 **글자 추출**을 누르면 이미지 속 글자를 텍스트로 바꿔 오른쪽에 보여줍니다. **운영체제에 내장된 OCR**(Windows OCR, macOS Vision)을 써서 인터넷 없이 PC 안에서 처리하고, 작은 글씨는 자동으로 2배 확대해 인식합니다. 자르기로 영역을 좁히면 더 정확합니다.'));
+body.push(...TIP(['한국어가 인식되지 않으면 Windows 설정 → 시간 및 언어 → 언어 및 지역 → 한국어 → 언어 옵션에서 ‘광학 문자 인식’이 설치되어 있는지 확인하세요. macOS는 13(Ventura) 이상에서 한국어를 인식합니다.']));
 
 // Table Converter
 body.push(H1('Table Converter — 표 형식 바꾸기'));
@@ -434,6 +434,16 @@ body.push(table(['설정', '설명'], [
 ], [3000, 6026]));
 body.push(gap());
 body.push(...TIP(['WEBP는 무손실로만 저장되어 용량이 크게 줄지 않을 수 있습니다. 용량을 줄이는 게 목적이면 JPG를 고르세요. 화면 캡처처럼 단색이 많은 PNG는 JPG로 바꾸면 오히려 커질 수 있습니다.']));
+
+// 일일 요약
+body.push(H1('일일 요약 — 오늘 AutoDesk가 한 일'));
+body.push(P('왼쪽 메뉴 **일일 요약**에서 하루 동안 AutoDesk가 **실제로 처리한 일만** 모아 봅니다. 백업한 파일·버전 수, 정리한 다운로드, 클립보드 정리, 업무 모드 실행, 실패 목록이 나옵니다. PC의 다른 활동이나 파일 내용은 보지 않습니다.'));
+body.push(...image('24-digest.png', '일일 요약 — 한 일, 기능별 건수, 요약 알림'));
+body.push(...bullets([
+  '날짜 옆 **‹ ›** 버튼이나 달력으로 지난 날짜를 볼 수 있습니다.',
+  '**복사**를 누르면 Markdown 형식으로 복사돼 업무 일지·메신저에 바로 붙여넣을 수 있고, **저장**으로 `.md`·`.html` 파일을 만듭니다.',
+  '**하루 요약 알림**을 켜면 정한 시각(기본 18:00) 이후 하루 한 번 OS 알림으로 오늘 요약을 보냅니다. 처리한 일이 없는 날은 알리지 않습니다(설정 가능).',
+]));
 
 // 9. 이력
 body.push(H1('9. 이력 — 무엇을 했는지 확인'));
@@ -503,7 +513,7 @@ const doc = new Document({
   creator: 'Logic-Phantom',
   lastModifiedBy: 'Logic-Phantom',
   title: 'AutoDesk 사용 설명서',
-  description: 'AutoDesk v0.3.1 사용 설명서',
+  description: 'AutoDesk v0.4.0 사용 설명서',
   features: { updateFields: true },
   styles: {
     default: { document: { run: { font: FONT, size: 21 } } },

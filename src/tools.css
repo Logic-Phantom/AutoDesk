@@ -145,3 +145,9 @@ html.dock-root, html.dock-root body, html.dock-root #root { background: transpar
 
 .row-control select.input { max-width: 100%; }
 .row-control .input:not(.num) { max-width: 100%; }
+
+.stats.three { grid-template-columns: repeat(3, 1fr); }
+.digest-list { font-size: 14.5px; line-height: 1.9; }
+.page-head .inline.tight .input[type='date'] { width: 150px; }
+
+.page-head > .inline { flex-shrink: 0; flex-wrap: nowrap; }

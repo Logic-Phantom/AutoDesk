@@ -192,6 +192,41 @@ pub fn engine_debug(core: CoreState) -> serde_json::Value {
 }
 
 #[tauri::command]
+pub fn digest_get(core: CoreState, day: Option<String>) -> AppResult<crate::digest::Digest> {
+    let day = day.unwrap_or_else(db::today_local);
+    crate::digest::build(&core.db(), &day)
+}
+
+#[tauri::command]
+pub fn digest_settings_get(core: CoreState) -> crate::digest::DigestSettings {
+    crate::digest::settings(&core)
+}
+
+#[tauri::command]
+pub fn digest_settings_set(core: CoreState, settings: crate::digest::DigestSettings) -> AppResult<()> {
+    let s = crate::digest::validate(settings)?;
+    db::set_setting(&core.db(), "digest", &s)?;
+    Ok(())
+}
+
+/// 요약을 Markdown/HTML 파일로 저장(경로는 저장 대화상자에서 고른 값)
+#[tauri::command]
+pub fn digest_save(core: CoreState, path: String, day: Option<String>) -> AppResult<()> {
+    let day = day.unwrap_or_else(db::today_local);
+    let d = crate::digest::build(&core.db(), &day)?;
+    let p = std::path::Path::new(&path);
+    let is_html = p.extension().map(|e| e.eq_ignore_ascii_case("html") || e.eq_ignore_ascii_case("htm")).unwrap_or(false);
+    let body = if is_html { crate::digest::html(&d) } else { crate::digest::markdown(&d) };
+    crate::tools::files::save_text(p, &body, false)
+}
+
+#[tauri::command]
+pub fn digest_markdown(core: CoreState, day: Option<String>) -> AppResult<String> {
+    let day = day.unwrap_or_else(db::today_local);
+    Ok(crate::digest::markdown(&crate::digest::build(&core.db(), &day)?))
+}
+
+#[tauri::command]
 pub fn quit_app(app: AppHandle) {
     crate::quit(&app);
 }

@@ -1,13 +1,7 @@
 // 영역 캡처: 방금 찍은 화면을 전체 화면으로 깔고, 드래그한 영역만 잘라 편집기로 넘긴다.
 import { useEffect, useRef, useState } from 'react';
+import { imageSizeOf, rectFromPoints as norm, toImageRect, type Rect } from '../lib/geometry';
 import { tools } from '../lib/toolsApi';
-
-interface Rect {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
 
 export function Overlay() {
   const [src, setSrc] = useState<string | null>(null);
@@ -36,24 +30,19 @@ export function Overlay() {
     };
   }, []);
 
-  const norm = (a: { x: number; y: number }, b: { x: number; y: number }): Rect => ({
-    x: Math.min(a.x, b.x),
-    y: Math.min(a.y, b.y),
-    w: Math.abs(a.x - b.x),
-    h: Math.abs(a.y - b.y),
-  });
+  const viewport = () => ({ w: window.innerWidth, h: window.innerHeight });
 
   function finish(r: Rect) {
     const img = imgRef.current;
     if (!img) return;
-    // 화면(CSS px) → 이미지(실제 px) 비율. 고해상도(배율 125%·150%) 모니터 대응
-    const sx = img.naturalWidth / window.innerWidth;
-    const sy = img.naturalHeight / window.innerHeight;
-    if (r.w < 4 || r.h < 4) {
-      tools.captureCrop(0, 0, img.naturalWidth, img.naturalHeight); // 클릭만 하면 화면 전체
+    // 화면(CSS px) → 이미지(물리 px). 고배율(125%·150%·200%) 모니터 대응 — lib/geometry 테스트 참고
+    const image = { w: img.naturalWidth, h: img.naturalHeight };
+    const ir = toImageRect(r, image, viewport());
+    if (!ir) {
+      tools.captureCrop(0, 0, image.w, image.h); // 클릭만 하면 화면 전체
       return;
     }
-    tools.captureCrop(Math.round(r.x * sx), Math.round(r.y * sy), Math.round(r.w * sx), Math.round(r.h * sy));
+    tools.captureCrop(ir.x, ir.y, ir.w, ir.h);
   }
 
   return (
@@ -87,7 +76,7 @@ export function Overlay() {
       <div className="overlay-dim" style={rect && rect.w > 0 ? { clipPath: `polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 ${rect.y}px, ${rect.x}px ${rect.y}px, ${rect.x}px ${rect.y + rect.h}px, ${rect.x + rect.w}px ${rect.y + rect.h}px, ${rect.x + rect.w}px ${rect.y}px, 0 ${rect.y}px)` } : undefined} />
       {rect && rect.w > 0 && (
         <div className="overlay-sel" style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}>
-          <span className="overlay-size">{Math.round(rect.w * (natural.w ? natural.w / window.innerWidth : 1))} × {Math.round(rect.h * (natural.h ? natural.h / window.innerHeight : 1))}</span>
+          <span className="overlay-size">{(() => { const z = imageSizeOf(rect, natural, viewport()); return `${z.w} × ${z.h}`; })()}</span>
         </div>
       )}
       {!start && (

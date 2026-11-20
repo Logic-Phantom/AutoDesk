@@ -17,7 +17,8 @@ OS 차이는 `platform.rs`, `uninstall.rs`(cfg 분기), `ai.rs`(CLI 탐색 경�
 | 업무 모드 — 화면 잠금 / 모니터 끄기 | `LockWorkStation` / `SC_MONITORPOWER` | `pmset displaysleepnow` | |
 | 업무 모드 — PC 종료 예약 | `shutdown /s /t 60`, 취소 `/a` | 미지원 | |
 | 화면 캡처(영역·전체·창) | ✅ xcap | 빌드만(화면 기록 권한 필요) | |
-| OCR | Windows.Media.Ocr ✅ | 미지원(예정: Vision) | 언어팩의 광학 문자 인식 필요 |
+| OCR | Windows.Media.Ocr ✅ | Vision(osascript JXA) — CI에서 실제 인식 테스트 | Windows는 언어팩의 광학 문자 인식, macOS는 13+에서 한국어 |
+| 일일 요약(집계·저장·정시 알림) | ✅ | ✅(공통 코드) | |
 | Table Converter · Compare Desk | ✅ | ✅(웹뷰 공통 코드) | |
 | Image Studio | ✅ | ✅(빌드) | WebP는 무손실 출력만 |
 | 알림 | 설치본에서만 정상(개발 실행은 PowerShell 이름) | 첫 실행 시 권한 요청 | |

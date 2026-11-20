@@ -3,8 +3,8 @@
 ## 자동 테스트
 
 ```bash
-npm run test:rust   # Rust 44개
-npm test            # Vitest 22개
+npm run test:rust   # Rust 48개(실제 OS OCR 1개 포함)
+npm test            # Vitest 28개
 npm run typecheck && npm run lint
 ```
 
@@ -15,6 +15,9 @@ npm run typecheck && npm run lint
 | AutoBackup | 후보 필터, 실제 변경시에만 스냅샷(같은 내용 재저장 무시)·원본 불변·manifest, 보관 개수, 크기 제한, 텍스트 diff |
 | Download Butler | 확장자 규칙, 다운로드 중 임시 파일/숨김 파일 무시, 시그니처 판별·확장자 불일치 |
 | AutoPaste | 한글·영문 줄 끝 공백, NBSP·U+200B, 이모지 ZWJ 보존, 빈 줄 축소, 공백만 있는 줄, 코드 들여쓰기 보존, URL·경로 불변, CRLF 유지/변환, HTML 옵션, 빈/깨끗한 입력 |
+| 일일 요약 | 실제 활동만 집계(시스템 기록 제외), 파일 수·버전 수, Markdown/HTML 형식, 빈 날, 날짜·시각 검증 |
+| OCR(실제) | 설명서 스크린샷에서 "Capture Studio" 인식 — Windows OCR·macOS Vision |
+| 캡처 좌표 | 100·125·150·175·200% 배율 변환, 역방향 드래그, 경계 자르기, 클릭만 한 경우 |
 | 업무 모드 | 따옴표 인자 분리, 보호 프로세스(explorer·AutoDesk) 거부, `javascript:`/`file:` 주소 거부 |
 | 도구(Rust) | DOCX 본문 추출, 저장 확장자 제한·BOM, 바이너리 파일 거부, 이미지 PNG→JPG 원본 보존, 리사이즈 모드 5종, 용량 제한 품질 탐색, 이름 충돌, OCR 2배 확대, 한글 글자 간 공백 붙이기 |
 | Table Converter | CSV 따옴표·줄바꿈, 형식 자동 감지, 엑셀 TSV→Markdown(파이프 이스케이프), CSV→JSON 타입·앞자리 0 보존, JSON 키 합집합, HTML colspan, TSV↔CSV, Markdown 역변환 |

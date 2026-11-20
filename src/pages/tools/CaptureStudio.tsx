@@ -71,7 +71,7 @@ export function CaptureStudio({ platform }: { platform: string }) {
           </label>
         </Card>
       )}
-      <p className="muted small">편집기 안에서 &lsquo;글자 추출&rsquo;을 누르면 Windows 내장 OCR로 이미지 속 글자를 PC 안에서 읽어냅니다(macOS는 아직 미지원).</p>
+      <p className="muted small">편집기 안에서 &lsquo;글자 추출&rsquo;을 누르면 OS 내장 OCR(Windows OCR / macOS Vision)로 이미지 속 글자를 PC 안에서 읽어냅니다.</p>
     </div>
   );
 }

@@ -7,6 +7,7 @@ mod ai;
 mod commands;
 mod core;
 mod db;
+mod digest;
 mod error;
 mod fsutil;
 mod modules;
@@ -192,6 +193,11 @@ pub fn run() {
             tools::save_text_file,
             tools::image_batch,
             tools::open_path,
+            commands::digest_get,
+            commands::digest_settings_get,
+            commands::digest_settings_set,
+            commands::digest_save,
+            commands::digest_markdown,
         ])
         .build(tauri::generate_context!())
         .expect("AutoDesk 실행 실패")

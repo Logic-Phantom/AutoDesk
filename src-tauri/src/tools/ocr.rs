@@ -1,6 +1,7 @@
-//! OCR: Windows에 내장된 OCR 엔진(Windows.Media.Ocr)으로 로컬에서 글자를 읽는다. 무료·오프라인.
-//! 사용자 프로필 언어(예: 한국어+영어)로 인식하며, 해당 언어팩의 OCR 구성 요소가 필요하다.
-//! macOS는 아직 지원하지 않는다(Vision 프레임워크 연동 예정).
+//! OCR: OS에 내장된 엔진으로 로컬에서 글자를 읽는다. 무료·오프라인, 추가 설치 없음.
+//! - Windows: Windows.Media.Ocr(사용자 프로필 언어, 언어팩의 광학 문자 인식 구성 요소 필요)
+//! - macOS: Vision 프레임워크(VNRecognizeTextRequest)를 기본 내장 `osascript`(JavaScript for Automation)로 호출.
+//!   한국어는 macOS 13 이상. 이미지는 임시 파일로 넘기고 인식이 끝나면 바로 지운다.
 
 use crate::error::{AppError, AppResult};
 
@@ -54,9 +55,69 @@ pub fn recognize_png(png: &[u8]) -> AppResult<String> {
     .map_err(|_| AppError::new("OCR_FAILED", "OCR 처리 중 오류가 발생했습니다"))?
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
+const MAC_VISION_JXA: &str = r#"
+ObjC.import('Foundation');
+ObjC.import('Vision');
+function run(argv) {
+  const url = $.NSURL.fileURLWithPath(argv[0]);
+  const req = $.VNRecognizeTextRequest.alloc.init;
+  req.recognitionLevel = 0; // VNRequestTextRecognitionLevelAccurate
+  req.usesLanguageCorrection = true;
+  try { req.recognitionLanguages = $(['ko-KR', 'en-US']); } catch (e) {}
+  const handler = $.VNImageRequestHandler.alloc.initWithURLOptions(url, $({}));
+  let ok = handler.performRequestsError($([req]), null);
+  if (!ok) {
+    // 한국어 미지원(macOS 12 이하) 등으로 실패하면 기본 언어로 다시 시도
+    req.recognitionLanguages = $(['en-US']);
+    ok = handler.performRequestsError($([req]), null);
+    if (!ok) throw new Error('Vision 인식 실패');
+  }
+  const res = req.results;
+  const lines = [];
+  for (let i = 0; i < res.count; i++) {
+    const cands = res.objectAtIndex(i).topCandidates(1);
+    if (cands.count > 0) lines.push(cands.objectAtIndex(0).string.js);
+  }
+  return lines.join(String.fromCharCode(10));
+}
+"#;
+
+#[cfg(target_os = "macos")]
+pub fn recognize_png(png: &[u8]) -> AppResult<String> {
+    use std::io::Write;
+    use std::process::{Command, Stdio};
+    let data = prepare_for_ocr(png);
+    let path = std::env::temp_dir().join(format!("autodesk-ocr-{}.png", uuid::Uuid::new_v4()));
+    std::fs::write(&path, &data)?;
+    let result = (|| -> AppResult<String> {
+        let mut child = Command::new("/usr/bin/osascript")
+            .args(["-l", "JavaScript", "-"])
+            .arg(&path)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .map_err(|e| AppError::new("OCR_FAILED", format!("OCR 실행 실패: {e}")))?;
+        child
+            .stdin
+            .take()
+            .ok_or_else(|| AppError::new("OCR_FAILED", "OCR 입력 연결 실패"))?
+            .write_all(MAC_VISION_JXA.as_bytes())?;
+        let out = child.wait_with_output()?;
+        if !out.status.success() {
+            let err: String = String::from_utf8_lossy(&out.stderr).chars().take(200).collect();
+            return Err(AppError::new("OCR_FAILED", format!("OCR 실패: {err}")));
+        }
+        Ok(String::from_utf8_lossy(&out.stdout).trim_end().to_string())
+    })();
+    let _ = std::fs::remove_file(&path); // 캡처 내용을 디스크에 남기지 않는다
+    result
+}
+
+#[cfg(not(any(windows, target_os = "macos")))]
 pub fn recognize_png(_png: &[u8]) -> AppResult<String> {
-    Err(AppError::new("OCR_UNSUPPORTED", "이 OS에서는 아직 OCR을 지원하지 않습니다(Windows 전용)"))
+    Err(AppError::new("OCR_UNSUPPORTED", "이 OS에서는 OCR을 지원하지 않습니다"))
 }
 
 /// Windows OCR은 한글 글자 사이에 공백을 넣는 경우가 있다. 한글-한글 사이의 단일 공백은
@@ -84,6 +145,15 @@ mod tests {
         let mut big = std::io::Cursor::new(Vec::new());
         image::DynamicImage::new_rgb8(2400, 100).write_to(&mut big, image::ImageFormat::Png).unwrap();
         assert_eq!(image::load_from_memory(&prepare_for_ocr(big.get_ref())).unwrap().width(), 2400);
+    }
+
+    /// 실제 OS OCR 엔진으로 설명서 스크린샷의 글자를 읽는다(Windows·macOS CI에서 실행).
+    #[cfg(any(windows, target_os = "macos"))]
+    #[test]
+    fn os_ocr_reads_real_screenshot() {
+        let png = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../docs/guide/images/18-capture.png")).unwrap();
+        let text = recognize_png(&png).expect("OCR 실행");
+        assert!(text.contains("Capture Studio"), "인식 결과: {text}");
     }
 
     #[test]

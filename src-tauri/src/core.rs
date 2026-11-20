@@ -584,7 +584,14 @@ impl Core {
 
     fn engine_loop(self: Arc<Self>, rx: Receiver<EngineMsg>) {
         let mut pending: HashMap<PathBuf, Instant> = HashMap::new();
+        let mut last_minute = Instant::now();
         loop {
+            // 1분마다: 일일 요약 알림 시각 확인
+            if last_minute.elapsed() >= Duration::from_secs(60) {
+                last_minute = Instant::now();
+                let me = Arc::clone(&self);
+                let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(move || crate::digest::tick(&me)));
+            }
             match rx.recv_timeout(Duration::from_millis(400)) {
                 Ok(EngineMsg::Stop) => break,
                 Ok(EngineMsg::Fs(p)) => {

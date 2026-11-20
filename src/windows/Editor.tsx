@@ -396,7 +396,7 @@ export function Editor() {
           </select>
           <span className="muted small">{outW}×{outH}</span>
         </label>
-        <button className="btn" onClick={runOcr} title="이미지 속 글자 추출(Windows 내장 OCR, 로컬 처리)"><ScanText size={16} /> 글자 추출</button>
+        <button className="btn" onClick={runOcr} title="이미지 속 글자 추출(OS 내장 OCR, 로컬 처리)"><ScanText size={16} /> 글자 추출</button>
         <button className="btn" onClick={saveAs}><Download size={16} /> 저장</button>
         <button className="btn primary" onClick={copy}><Copy size={16} /> 복사</button>
       </header>
@@ -442,7 +442,7 @@ export function Editor() {
               <>
                 <textarea className="input" value={ocr.text} onChange={(e) => setOcr({ ...ocr, text: e.target.value })} spellCheck={false} />
                 <button className="btn primary" onClick={() => tools.textCopy(ocr.text ?? '').then(() => flash('텍스트를 복사했습니다'))}><Copy size={14} /> 텍스트 복사</button>
-                <p className="muted small">Windows 내장 OCR로 PC 안에서 인식했습니다. 자르기로 영역을 좁히면 더 정확합니다.</p>
+                <p className="muted small">OS 내장 OCR로 PC 안에서 인식했습니다. 자르기로 영역을 좁히면 더 정확합니다.</p>
               </>
             )}
           </aside>
