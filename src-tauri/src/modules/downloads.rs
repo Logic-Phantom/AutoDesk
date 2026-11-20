@@ -1,4 +1,4 @@
-//! Download Butler: Downloads 폴더(최상위)에 새로 들어온 파일을 로컬 규칙으로 분류한다.
+//! 다운로드 정리: Downloads 폴더(최상위)에 새로 들어온 파일을 로컬 규칙으로 분류한다.
 //! 자동 삭제·실행·덮어쓰기는 절대 하지 않으며, 모든 이동은 되돌릴 수 있다.
 
 use serde::{Deserialize, Serialize};

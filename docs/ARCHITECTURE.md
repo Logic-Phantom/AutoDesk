@@ -10,7 +10,7 @@ React UI (src/)                         ← 상태를 소유하지 않음. 명�
 Rust Core (src-tauri/src/)  ── 프로세스 1개, 관리자 권한 없음, 서비스/데몬 없음
   lib.rs         앱 진입점: 플러그인, 창, 닫기 정책, 종료 처리
   core.rs        Lifecycle · 전역/모듈 스위치 · 공유 Watch Service · 엔진 스레드 · 작업 기록
-  shortcuts.rs   전역 단축키 등록/해제(AutoPaste, AI 다듬기)
+  shortcuts.rs   전역 단축키 등록/해제(클립보드 정리, AI 다듬기)
   tray.rs        트레이/메뉴 막대(체크 상태는 Core에서 다시 그림)
   commands.rs    Tauri 명령(입력 검증)
   db.rs          SQLite(마이그레이션 v3) — settings(업무 모드·도구 설정 포함), modules, watch_targets, jobs, activity, file_versions, file_moves
@@ -42,7 +42,7 @@ OS 파일 이벤트 (Create/Modify)
   → activity 기록 + 알림 + core://changed
 ```
 
-- **공유 감시자**: 경로마다 OS 감시는 한 번만 건다. AutoBackup과 Download Butler가 같은 폴더를 보면 하나의 감시를 공유하고 라우팅으로 나눈다.
+- **공유 감시자**: 경로마다 OS 감시는 한 번만 건다. 자동 백업과 다운로드 정리가 같은 폴더를 보면 하나의 감시를 공유하고 라우팅으로 나눈다.
 - **전역 OFF/모듈 OFF**: 원하는 감시 목록을 다시 계산해 필요 없는 경로는 `unwatch`, 대상이 없으면 감시자 자체를 drop한다. UI만 바뀌는 토글은 없다.
 - **격리**: 모듈 처리는 `catch_unwind`로 감싸 한 모듈의 panic이 엔진을 멈추지 않는다. 같은 모듈이 연속 5회 실패하면 그 모듈만 `ERROR_PAUSED`.
 - **복구**: 앱 시작·전역 ON·모듈 ON 시 `QUEUED/RUNNING` 작업을 다시 처리(최대 3회). 남은 `*.tmp-snapshot` 파일 삭제.

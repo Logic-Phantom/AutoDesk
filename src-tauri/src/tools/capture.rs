@@ -1,4 +1,4 @@
-//! Capture Studio: 화면 전체/영역/창 캡처 → 편집 창.
+//! 화면 캡처: 화면 전체/영역/창 캡처 → 편집 창.
 //! 캡처 이미지는 메모리에만 두고, 사용자가 저장/복사할 때만 밖으로 나간다(디스크 임시 파일 없음).
 
 use crate::error::{AppError, AppResult};
@@ -223,7 +223,7 @@ pub fn open_editor(app: &AppHandle) -> AppResult<()> {
         return Ok(());
     }
     let w = WebviewWindowBuilder::new(app, "editor", WebviewUrl::App("index.html#/editor".into()))
-        .title("Capture Studio — AutoDesk")
+        .title("화면 캡처 — AutoDesk")
         .inner_size(1320.0, 820.0)
         .min_inner_size(760.0, 520.0)
         .visible(true)

@@ -1,4 +1,4 @@
-//! 전역 단축키(AutoPaste / AI 다듬기 / 화면 캡처). 자동화 단축키는 모듈이 실행 중일 때만,
+//! 전역 단축키(클립보드 정리 / AI 다듬기 / 화면 캡처). 자동화 단축키는 모듈이 실행 중일 때만,
 //! 캡처 단축키는 도구 설정에서 켜 둔 동안만 OS에 등록한다.
 //! 클립보드는 단축키를 누른 순간에만 읽는다(상시 폴링 없음).
 
@@ -130,7 +130,7 @@ fn read_text(core: &Core) -> Option<String> {
     match core.app.clipboard().read_text() {
         Ok(t) if !t.is_empty() => Some(t),
         _ => {
-            core.notify("AutoPaste", "클립보드에 텍스트가 없습니다(이미지·파일은 건드리지 않습니다)");
+            core.notify("클립보드 정리", "클립보드에 텍스트가 없습니다(이미지·파일은 건드리지 않습니다)");
             None
         }
     }
@@ -156,7 +156,7 @@ fn run_clean(core: &Arc<Core>) {
     let _ = crate::db::add_activity(&core.db(), modules::AUTOPASTE, "clipboard.clean", result, None, &msg, None, None);
     let _ = crate::db::record_module_run(&core.db(), modules::AUTOPASTE, None);
     if cfg.notify {
-        core.notify("AutoPaste", &msg);
+        core.notify("클립보드 정리", &msg);
     }
 }
 

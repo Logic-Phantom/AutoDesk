@@ -1,4 +1,4 @@
-// Compare Desk 핵심 로직. 줄 단위 diff로 좌우 정렬 행을 만들고, 수정된 줄은 단어/글자 단위로 강조한다.
+// 문서 비교 핵심 로직. 줄 단위 diff로 좌우 정렬 행을 만들고, 수정된 줄은 단어/글자 단위로 강조한다.
 import { diffArrays, diffChars, diffWordsWithSpace } from 'diff';
 import { parseDelimited } from './table';
 
@@ -257,7 +257,7 @@ mark.add{background:#b7ebc6}mark.del{background:#f6c3c3;text-decoration:line-thr
 .sum span{margin-right:14px}</style></head><body>
 <h1>${esc(title)}</h1><p>왼쪽: ${esc(leftName)}<br>오른쪽: ${esc(rightName)}</p>
 <p class="sum"><span>수정 ${stats.modified}</span><span>추가 ${stats.added}</span><span>삭제 ${stats.removed}</span><span>같음 ${stats.same}</span></p>
-<table>${body}</table><p style="color:#999">AutoDesk Compare Desk · ${new Date().toLocaleString('ko-KR')}</p></body></html>`;
+<table>${body}</table><p style="color:#999">AutoDesk 문서 비교 · ${new Date().toLocaleString('ko-KR')}</p></body></html>`;
 }
 
 /** 변경점만 텍스트로(메일/메신저에 붙여넣기용) */

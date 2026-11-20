@@ -147,11 +147,11 @@ mod tests {
         assert_eq!(image::load_from_memory(&prepare_for_ocr(big.get_ref())).unwrap().width(), 2400);
     }
 
-    /// 실제 OS OCR 엔진으로 설명서 스크린샷의 글자를 읽는다(Windows·macOS CI에서 실행).
+    /// 실제 OS OCR 엔진으로 테스트용 스크린샷의 글자를 읽는다(Windows·macOS CI에서 실행).
     #[cfg(any(windows, target_os = "macos"))]
     #[test]
     fn os_ocr_reads_real_screenshot() {
-        let png = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../docs/guide/images/18-capture.png")).unwrap();
+        let png = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/tests/fixtures/ocr-sample.png")).unwrap();
         let text = recognize_png(&png).expect("OCR 실행");
         assert!(text.contains("Capture Studio"), "인식 결과: {text}");
     }

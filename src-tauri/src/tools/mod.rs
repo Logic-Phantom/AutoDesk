@@ -1,4 +1,4 @@
-//! 필요할 때만 쓰는 도구들(백그라운드에서 돌지 않음): Capture Studio, Table Converter, Compare Desk, Image Studio
+//! 필요할 때만 쓰는 도구들(백그라운드에서 돌지 않음): 화면 캡처, 표 변환, 문서 비교, 이미지 변환
 //! 그리고 업무 모드 플로팅 버튼(dock).
 
 pub mod capture;
@@ -262,7 +262,7 @@ pub fn save_text_file(path: String, contents: String, bom: bool) -> AppResult<()
     files::save_text(std::path::Path::new(&path), &contents, bom)
 }
 
-// Image Studio
+// 이미지 변환
 
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]

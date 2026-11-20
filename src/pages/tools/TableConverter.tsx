@@ -70,7 +70,7 @@ export function TableConverter() {
     <div className="page wide">
       <header className="page-head">
         <div>
-          <h1>Table Converter</h1>
+          <h1>표 변환</h1>
           <p className="muted">엑셀·웹·CSV·JSON 표를 붙여넣으면 형식을 자동으로 알아내고, 원하는 형식으로 바꿔 줍니다. 모든 처리는 PC 안에서만 합니다.</p>
         </div>
       </header>

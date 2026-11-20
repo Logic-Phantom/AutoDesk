@@ -49,7 +49,7 @@ export function Approvals({ tick }: { tick: unknown }) {
                   <div className="ellipsis grow">
                     <div className="strong ellipsis">{fileName(p.path)}</div>
                     <div className="muted small">
-                      Download Butler · {formatTime(j.createdAt)} {p.confident === false && '· 분류 불확실 — 확인 필요'}
+                      다운로드 정리 · {formatTime(j.createdAt)} {p.confident === false && '· 분류 불확실 — 확인 필요'}
                     </div>
                   </div>
                   <select className="input" value={cat} aria-label="이동할 폴더" onChange={(e) => setChoice({ ...choice, [j.id]: e.target.value })}>

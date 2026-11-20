@@ -1,4 +1,4 @@
-// Capture Studio 편집기: 화살표·사각형·형광펜·번호·텍스트·모자이크·자르기·크기 변경·OCR·복사·저장.
+// 화면 캡처 편집기: 화살표·사각형·형광펜·번호·텍스트·모자이크·자르기·크기 변경·OCR·복사·저장.
 // 원본 캡처는 메모리에만 있고, 사용자가 저장/복사할 때만 밖으로 나간다.
 import { listen } from '@tauri-apps/api/event';
 import { save } from '@tauri-apps/plugin-dialog';

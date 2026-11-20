@@ -88,7 +88,7 @@ export function CompareDesk() {
     <div className="page wide">
       <header className="page-head">
         <div>
-          <h1>Compare Desk</h1>
+          <h1>문서 비교</h1>
           <p className="muted">두 문서나 텍스트의 차이를 줄·단어·글자 단위로 보여줍니다. 계약서·안내문 수정 전후 확인, CSV 데이터 변경 확인에 쓰세요. DOCX는 본문 텍스트만 비교합니다.</p>
         </div>
       </header>

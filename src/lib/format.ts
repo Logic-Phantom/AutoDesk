@@ -34,9 +34,9 @@ export const RESULT_LABEL: Record<ActivityRow['result'], string> = {
 };
 
 export const MODULE_NAME: Record<string, string> = {
-  backup: 'AutoBackup',
-  downloads: 'Download Butler',
-  autopaste: 'AutoPaste',
+  backup: '자동 백업',
+  downloads: '다운로드 정리',
+  autopaste: '클립보드 정리',
   core: '시스템',
 };
 

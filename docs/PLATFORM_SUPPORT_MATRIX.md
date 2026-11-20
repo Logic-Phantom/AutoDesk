@@ -19,8 +19,8 @@ OS 차이는 `platform.rs`, `uninstall.rs`(cfg 분기), `ai.rs`(CLI 탐색 경�
 | 화면 캡처(영역·전체·창) | ✅ xcap | 빌드만(화면 기록 권한 필요) | |
 | OCR | Windows.Media.Ocr ✅ | Vision(osascript JXA) — CI에서 실제 인식 테스트 | Windows는 언어팩의 광학 문자 인식, macOS는 13+에서 한국어 |
 | 일일 요약(집계·저장·정시 알림) | ✅ | ✅(공통 코드) | |
-| Table Converter · Compare Desk | ✅ | ✅(웹뷰 공통 코드) | |
-| Image Studio | ✅ | ✅(빌드) | WebP는 무손실 출력만 |
+| 표 변환 · 문서 비교 | ✅ | ✅(웹뷰 공통 코드) | |
+| 이미지 변환 | ✅ | ✅(빌드) | WebP는 무손실 출력만 |
 | 알림 | 설치본에서만 정상(개발 실행은 PowerShell 이름) | 첫 실행 시 권한 요청 | |
 | 폴더 접근 | 제한 없음 | 문서/데스크톱/다운로드 접근 시 OS 권한 창 | 거부되면 해당 모듈만 `설정 필요` |
 | 설치 형식 | NSIS(현재 사용자) | .app / .dmg | 둘 다 서명 안 함 |

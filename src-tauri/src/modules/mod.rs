@@ -22,19 +22,19 @@ pub struct ModuleMeta {
 pub const REGISTRY: &[ModuleMeta] = &[
     ModuleMeta {
         id: BACKUP,
-        name: "AutoBackup Guardian",
+        name: "자동 백업",
         description: "등록한 폴더의 파일이 바뀌면 이전 버전을 자동 보관합니다. 원본은 건드리지 않습니다.",
         default_enabled: true,
     },
     ModuleMeta {
         id: DOWNLOADS,
-        name: "Download Butler",
+        name: "다운로드 정리",
         description: "다운로드 폴더에 새 파일이 들어오면 종류별 폴더로 분류합니다. 기본은 미리보기(승인 후 이동)입니다.",
         default_enabled: true,
     },
     ModuleMeta {
         id: AUTOPASTE,
-        name: "AutoPaste",
+        name: "클립보드 정리",
         description: "단축키를 누르면 클립보드 텍스트의 불필요한 공백·특수문자를 정리합니다. 원문은 저장하지 않습니다.",
         default_enabled: true,
     },

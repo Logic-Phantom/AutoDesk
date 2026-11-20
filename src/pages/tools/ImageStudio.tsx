@@ -78,7 +78,7 @@ export function ImageStudio() {
     <div className="page wide">
       <header className="page-head">
         <div>
-          <h1>Image Studio</h1>
+          <h1>이미지 변환</h1>
           <p className="muted">여러 이미지를 한 번에 형식 변환·크기 조절·용량 압축합니다. 원본은 건드리지 않고 별도 폴더에 저장합니다. 휴대폰 사진의 회전 정보도 반영합니다.</p>
         </div>
       </header>

@@ -1,4 +1,4 @@
-//! Image Studio: 여러 이미지를 한 번에 변환·리사이즈·압축한다. 원본은 절대 덮어쓰지 않고 별도 폴더에 저장한다.
+//! 이미지 변환: 여러 이미지를 한 번에 변환·리사이즈·압축한다. 원본은 절대 덮어쓰지 않고 별도 폴더에 저장한다.
 
 use crate::error::{AppError, AppResult};
 use crate::fsutil;

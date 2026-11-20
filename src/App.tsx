@@ -22,10 +22,10 @@ const NAV = [
   { id: 'approvals', label: '승인 센터', icon: Inbox, group: '' },
   { id: 'digest', label: '일일 요약', icon: CalendarCheck, group: '' },
   { id: 'workspace', label: '업무 모드', icon: Sunrise, group: '' },
-  { id: 'capture', label: 'Capture Studio', icon: Camera, group: '도구' },
-  { id: 'table', label: 'Table Converter', icon: Table2, group: '도구' },
-  { id: 'compare', label: 'Compare Desk', icon: Columns2, group: '도구' },
-  { id: 'images', label: 'Image Studio', icon: Images, group: '도구' },
+  { id: 'capture', label: '화면 캡처', icon: Camera, group: '도구' },
+  { id: 'table', label: '표 변환', icon: Table2, group: '도구' },
+  { id: 'compare', label: '문서 비교', icon: Columns2, group: '도구' },
+  { id: 'images', label: '이미지 변환', icon: Images, group: '도구' },
   { id: 'settings', label: '설정', icon: SettingsIcon, group: '-' },
 ] as const;
 type Page = (typeof NAV)[number]['id'];

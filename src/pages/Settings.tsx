@@ -77,7 +77,7 @@ export function Settings({ data, theme, setTheme }: { data: Overview; theme: The
         <ul className="muted small bullets">
           <li>감시 대상은 직접 추가한 폴더와 다운로드 폴더뿐입니다. 디스크 전체를 검색하지 않습니다.</li>
           <li>클립보드는 단축키를 누를 때만 읽고, 내용은 DB·로그에 저장하지 않습니다.</li>
-          <li>외부 전송은 AutoPaste의 &lsquo;Claude Code로 다듬기&rsquo;를 직접 켠 경우에만, 단축키를 누른 순간에만 일어납니다(기본 꺼짐).</li>
+          <li>외부 전송은 클립보드 정리의 &lsquo;Claude Code로 다듬기&rsquo;를 직접 켠 경우에만, 단축키를 누른 순간에만 일어납니다(기본 꺼짐).</li>
           <li>관리자 권한, Windows 서비스, macOS LaunchDaemon을 사용하지 않습니다.</li>
         </ul>
       </Card>

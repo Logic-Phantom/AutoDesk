@@ -713,7 +713,7 @@ impl Core {
         self.notify_changed();
     }
 
-    // ---------------- AutoBackup ----------------
+    // ---------------- 자동 백업 ----------------
 
     fn handle_backup(&self, path: &Path, target_id: &str) -> AppResult<&'static str> {
         let cfg: backup::BackupConfig = self.module_config(modules::BACKUP);
@@ -801,7 +801,7 @@ impl Core {
         Ok(dest.to_string_lossy().to_string())
     }
 
-    // ---------------- Download Butler ----------------
+    // ---------------- 다운로드 정리 ----------------
 
     fn handle_download(&self, job_id: &str, path: &Path) -> AppResult<&'static str> {
         let cfg: downloads::DownloadsConfig = self.module_config(modules::DOWNLOADS);
@@ -933,7 +933,7 @@ impl Core {
     /// 다운로드 폴더에 이미 있는 파일을 일괄 '미리보기'로 올린다(자동 이동하지 않음).
     pub fn scan_downloads(self: &Arc<Self>) -> AppResult<usize> {
         if !self.is_module_running(modules::DOWNLOADS) {
-            return Err(AppError::invalid("Download Butler가 실행 중일 때만 검사할 수 있습니다"));
+            return Err(AppError::invalid("다운로드 정리가 실행 중일 때만 검사할 수 있습니다"));
         }
         let cfg: downloads::DownloadsConfig = self.module_config(modules::DOWNLOADS);
         let mut n = 0;

@@ -1,4 +1,4 @@
-// Table Converter 핵심 로직(순수 함수). 엑셀/웹에서 복사한 표를 여러 형식으로 바꾼다.
+// 표 변환 핵심 로직(순수 함수). 엑셀/웹에서 복사한 표를 여러 형식으로 바꾼다.
 
 export type Grid = string[][];
 export type InputFormat = 'auto' | 'tsv' | 'csv' | 'json' | 'html' | 'markdown';

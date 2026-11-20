@@ -1,4 +1,4 @@
-//! Daily Work Digest: AutoDesk가 하루 동안 '실제로 처리한 일'만 모아 요약한다.
+//! 일일 요약: AutoDesk가 하루 동안 '실제로 처리한 일'만 모아 요약한다.
 //! - 사용자의 다른 PC 활동이나 파일 내용은 보지 않는다(activity 테이블의 자체 기록만).
 //! - 실제 건수만 표시하고 추정하지 않는다.
 //! - 선택: 정해진 시각에 하루 한 번 알림(기본 OFF).
@@ -58,9 +58,9 @@ pub struct Digest {
 
 fn label(module: &str) -> &str {
     match module {
-        "backup" => "AutoBackup",
-        "downloads" => "Download Butler",
-        "autopaste" => "AutoPaste",
+        "backup" => "자동 백업",
+        "downloads" => "다운로드 정리",
+        "autopaste" => "클립보드 정리",
         "workspace" => "업무 모드",
         "core" => "시스템",
         other => other,
@@ -310,9 +310,9 @@ mod tests {
         seed(&conn);
         let d = build(&conn, &db::today_local()).unwrap();
         let md = markdown(&d);
-        assert!(md.contains("| AutoBackup | 3 | 1 |"));
+        assert!(md.contains("| 자동 백업 | 3 | 1 |"));
         let h = html(&d);
-        assert!(h.contains("<td>AutoBackup</td>"));
+        assert!(h.contains("<td>자동 백업</td>"));
         assert!(build(&conn, "2026/01/01").is_err());
     }
 

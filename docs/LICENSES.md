@@ -11,14 +11,14 @@ AutoDesk 자체 코드: **MIT** ([LICENSE](../LICENSE)). 개인용이며 판매�
 | notify | 파일 감시 | CC0-1.0 |
 | sha2, hex, uuid, chrono, serde, serde_json | 해시·ID·시간·직렬화 | MIT OR Apache-2.0 |
 | similar | 텍스트 diff | Apache-2.0 |
-| encoding_rs | EUC-KR 문서·CSV 해석(Compare Desk 등) | (Apache-2.0 OR MIT) AND BSD-3-Clause |
+| encoding_rs | EUC-KR 문서·CSV 해석(문서 비교 등) | (Apache-2.0 OR MIT) AND BSD-3-Clause |
 | xcap | 화면·창 캡처 | Apache-2.0 |
 | image | 이미지 디코딩·리사이즈·인코딩 | MIT OR Apache-2.0 |
 | zip | DOCX 본문 추출 | MIT |
 | base64 | 이미지 데이터 전달 | MIT OR Apache-2.0 |
 | windows | Windows OCR·창 제어·잠금 API | MIT OR Apache-2.0 |
 | tauri-plugin-opener | 업무 시작 시 URL·파일 열기 | MIT OR Apache-2.0 |
-| diff (npm) | Compare Desk 줄·단어·글자 비교 | BSD-3-Clause |
+| diff (npm) | 문서 비교 줄·단어·글자 비교 | BSD-3-Clause |
 | react, react-dom | UI | MIT |
 | lucide-react | 아이콘 | ISC |
 | @tauri-apps/api, @tauri-apps/plugin-dialog | 프런트-코어 연결 | MIT OR Apache-2.0 |

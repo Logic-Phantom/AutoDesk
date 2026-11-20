@@ -23,7 +23,7 @@ export function CaptureStudio({ platform }: { platform: string }) {
     <div className="page">
       <header className="page-head">
         <div>
-          <h1>Capture Studio</h1>
+          <h1>화면 캡처</h1>
           <p className="muted">화면을 캡처해서 화살표·도형·번호·텍스트·모자이크를 넣고, 잘라서 복사하거나 저장합니다. 캡처는 저장하기 전까지 메모리에만 있습니다.</p>
         </div>
       </header>
