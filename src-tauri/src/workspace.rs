@@ -82,6 +82,9 @@ impl Default for WorkspaceConfig {
 const PROTECTED: &[&str] = &[
     "explorer.exe", "autodesk.exe", "svchost.exe", "csrss.exe", "winlogon.exe", "dwm.exe", "lsass.exe", "services.exe",
     "smss.exe", "wininit.exe", "taskmgr.exe", "system", "finder", "dock", "loginwindow", "windowserver",
+    // Windows 셸 구성 요소: 닫으면 여러 앱(UWP)이나 시작 메뉴·검색·입력기가 함께 닫힌다
+    "applicationframehost.exe", "shellexperiencehost.exe", "startmenuexperiencehost.exe", "searchhost.exe",
+    "searchapp.exe", "textinputhost.exe", "lockapp.exe", "sihost.exe", "ctfmon.exe", "msedgewebview2.exe",
 ];
 
 pub fn is_protected(process: &str) -> bool {
@@ -611,6 +614,8 @@ mod tests {
         assert!(is_protected("explorer.exe"));
         assert!(is_protected("AutoDesk.exe"));
         assert!(!is_protected("chrome.exe"));
+        assert!(is_protected("ApplicationFrameHost.exe"));
+        assert!(is_protected("msedgewebview2.exe"));
         let c = WorkspaceConfig { end_close: vec![CloseItem { process: "explorer.exe".into(), label: String::new() }], ..Default::default() };
         assert!(validate(c).is_err());
     }

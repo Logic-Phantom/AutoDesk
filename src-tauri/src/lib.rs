@@ -21,8 +21,14 @@ use crate::core::Core;
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 
-pub(crate) fn create_main_window(app: &AppHandle) -> tauri::Result<tauri::WebviewWindow> {
-    WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
+/// 메인 창. 트레이로 보낼 때는 숨기지 않고 닫아서(WebView 해제) 메모리를 돌려주고, 열 때 다시 만든다.
+/// `page`를 주면 그 화면으로 바로 연다(새 창은 아직 이벤트를 못 받으므로 URL로 전달).
+pub(crate) fn create_main_window(app: &AppHandle, page: Option<&str>) -> tauri::Result<tauri::WebviewWindow> {
+    let url = match page.filter(|p| p.chars().all(|c| c.is_ascii_alphanumeric())) {
+        Some(p) => format!("index.html?page={p}"),
+        None => "index.html".to_string(),
+    };
+    WebviewWindowBuilder::new(app, "main", WebviewUrl::App(url.into()))
         .title("AutoDesk")
         .inner_size(1080.0, 720.0)
         .min_inner_size(820.0, 560.0)
@@ -80,9 +86,10 @@ pub fn run() {
             let core = Core::init(&handle).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
             app.manage(Arc::clone(&core));
             tray::create(&handle)?;
-            let window = create_main_window(&handle)?;
             core.start();
+            // 로그인 자동 실행 때는 창을 만들지 않는다(트레이·플로팅 버튼만, 메모리 절약)
             if !started_by_autostart {
+                let window = create_main_window(&handle, None)?;
                 window.show()?;
                 let _ = window.set_focus();
                 core.update_runtime(|r| r.window_visible = true);
@@ -92,16 +99,30 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| {
+            // 플로팅 버튼은 Alt+F4 등으로 닫히지 않게 한다(끄기는 업무 모드 설정에서만 → destroy)
+            if window.label() == "dock" {
+                if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                    let shutting = window.app_handle().try_state::<Arc<Core>>().map(|c| c.runtime().shutting_down).unwrap_or(true);
+                    if !shutting {
+                        api.prevent_close();
+                    }
+                }
+                return;
+            }
+            if window.label() == "editor" {
+                if let tauri::WindowEvent::Destroyed = event {
+                    tools::capture::on_editor_closed(window.app_handle());
+                }
+                return;
+            }
             if window.label() != "main" {
                 return;
             }
-            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+            if let tauri::WindowEvent::CloseRequested { .. } = event {
                 let app = window.app_handle();
                 let Some(core) = app.try_state::<Arc<Core>>().map(|c| Arc::clone(&c)) else { return };
                 if core.runtime().background && !core.runtime().shutting_down {
-                    // 백그라운드 상주: 창만 숨기고 자동화는 계속
-                    api.prevent_close();
-                    let _ = window.hide();
+                    // 백그라운드 상주: 창은 닫아 WebView 메모리를 돌려주고, 자동화·트레이·플로팅 버튼은 계속
                     let first = !core.runtime().tray_hint_shown;
                     core.update_runtime(|r| {
                         r.window_visible = false;
@@ -164,6 +185,7 @@ pub fn run() {
             tools::capture_clear,
             tools::capture_gen,
             tools::image_copy,
+            tools::text_copy,
             tools::image_save,
             tools::ocr_image,
             tools::read_text_file,

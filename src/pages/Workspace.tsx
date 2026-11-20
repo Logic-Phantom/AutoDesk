@@ -91,7 +91,7 @@ export function Workspace() {
         </Row>
       </Card>
 
-      <Card title={<span className="inline tight"><Sun size={18} className="c-start" /> 업무 시작</span>} actions={<button className="btn small" onClick={() => test('start')}><Play size={14} /> 지금 실행</button>}>
+      <Card title={<span className="inline tight"><Sun size={18} className="c-start" /> 업무 시작</span>} actions={<button className="btn small" disabled={busy} onClick={() => test('start')}><Play size={14} /> 지금 실행</button>}>
         <p className="muted small">순서대로 엽니다. 프로그램·문서·폴더·웹사이트(기본 브라우저)를 등록하세요.</p>
         {cfg.startItems.length === 0 ? <Empty>등록한 항목이 없습니다.</Empty> : (
           <ul className="list">
@@ -123,7 +123,7 @@ export function Workspace() {
         <Row label="꺼져 있던 자동화 다시 켜기"><Toggle label="자동화 켜기" checked={cfg.startResumeAutomation} onChange={(v) => set({ startResumeAutomation: v })} /></Row>
       </Card>
 
-      <Card title={<span className="inline tight"><Coffee size={18} className="c-away" /> 자리 비움</span>} actions={<button className="btn small" onClick={() => test('away')}><Play size={14} /> 지금 실행</button>}>
+      <Card title={<span className="inline tight"><Coffee size={18} className="c-away" /> 자리 비움</span>} actions={<button className="btn small" disabled={busy} onClick={() => test('away')}><Play size={14} /> 지금 실행</button>}>
         <Row label="동작">
           <select className="input" value={cfg.awayAction} onChange={(e) => set({ awayAction: e.target.value as WorkspaceConfig['awayAction'] })}>
             <option value="lock">화면 잠금(Win+L과 같음)</option>
@@ -134,7 +134,7 @@ export function Workspace() {
         <Row label="자동화 일시정지" hint="돌아와서 업무 시작을 누르면 다시 켜집니다"><Toggle label="자리 비움 시 자동화 정지" checked={cfg.awayPauseAutomation} onChange={(v) => set({ awayPauseAutomation: v })} /></Row>
       </Card>
 
-      <Card title={<span className="inline tight"><Moon size={18} className="c-end" /> 퇴근</span>} actions={<button className="btn small" onClick={() => test('end')}><Play size={14} /> 지금 실행</button>}>
+      <Card title={<span className="inline tight"><Moon size={18} className="c-end" /> 퇴근</span>} actions={<button className="btn small" disabled={busy} onClick={() => test('end')}><Play size={14} /> 지금 실행</button>}>
         <h3>1. 먼저 실행할 정리 명령</h3>
         <p className="muted small">예: Tomcat <code>bin\shutdown.bat</code>, 빌드 서버 종료 스크립트. 등록한 순서대로 실행하고 끝날 때까지(최대 90초) 기다립니다.</p>
         {cfg.endCommands.length === 0 ? <Empty>등록한 명령이 없습니다.</Empty> : (

@@ -91,10 +91,10 @@ AutoMateHQ·JARVIS는 GitHub Actions/Cloudflare Workers에서 도는 **서버형
 
 | 창(label) | 해시 | 만들어지는 때 | 비고 |
 |---|---|---|---|
-| main | (없음) | 앱 시작 | 닫기 = 숨김(백그라운드 ON) |
-| dock | `#/dock` | 업무 모드 '플로팅 버튼 표시' ON | 투명·항상 위·작업 표시줄 제외, 내용 크기에 맞춰 오른쪽 아래 기준으로 크기 조절 |
+| main | (없음, `?page=` 로 첫 화면 지정) | 앱 시작·트레이/독에서 열 때 | 닫기 = 창 해제(백그라운드 ON이면 앱은 계속, WebView 메모리 반환). 로그인 자동 실행 때는 만들지 않음 |
+| dock | `#/dock` | 업무 모드 '플로팅 버튼 표시' ON | 투명·항상 위·작업 표시줄 제외, 내용 크기에 맞춰 오른쪽 아래 기준으로 크기 조절. Alt+F4 등 닫기 요청은 무시하고 설정에서 끌 때만 destroy |
 | overlay | `#/overlay` | 영역 캡처 | 커서가 있는 모니터 전체를 덮음(물리 픽셀 위치·크기), 선택 후 닫힘 |
-| editor | `#/editor` | 캡처 완료 | 이미 열려 있으면 재사용(`capture://updated`), 닫으면 자기 세대의 캡처만 메모리에서 삭제 |
+| editor | `#/editor` | 캡처 완료 | 이미 열려 있으면 재사용(`capture://updated`). 창이 사라지면(Rust `Destroyed` 이벤트) 그 편집기가 보던 세대의 캡처만 삭제 — JS `onCloseRequested`는 destroy 권한이 필요해 쓰지 않음 |
 
 - Windows에서는 **동기 명령(메인 스레드)에서 창을 만들면 교착**되므로 창을 만들거나 닫는 명령은 모두 async(필요 시 `spawn_blocking`)로 둔다.
 - 캡처 PNG는 `CaptureStore{png, gen}`(메모리)에만 있고 IPC 원시 바이트(`ipc::Response`)로 전달한다. 디스크 임시 파일 없음.

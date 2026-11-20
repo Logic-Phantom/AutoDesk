@@ -59,7 +59,7 @@ pub fn sync_dock(core: &Arc<Core>) {
     let existing = app.get_webview_window("dock");
     if !cfg.dock_enabled || core.runtime().shutting_down {
         if let Some(w) = existing {
-            let _ = w.close();
+            let _ = w.destroy(); // close()는 닫기 방지 처리에 막히므로 destroy
         }
         return;
     }
@@ -108,18 +108,26 @@ pub async fn workspace_set(core: CoreState<'_>, config: workspace::WorkspaceConf
     Ok(())
 }
 
-/// mode: start | away | end. 오래 걸릴 수 있으므로 별도 스레드에서 실행.
+static MODE_RUNNING: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// mode: start | away | end. 오래 걸릴 수 있으므로 별도 스레드에서 실행. 동시에 두 번 실행하지 않는다.
 #[tauri::command]
 pub async fn workspace_run(core: CoreState<'_>, mode: String) -> AppResult<workspace::ModeResult> {
+    use std::sync::atomic::Ordering;
+    if MODE_RUNNING.swap(true, Ordering::SeqCst) {
+        return Err(AppError::new("BUSY", "다른 업무 모드가 아직 실행 중입니다. 끝난 뒤 다시 눌러 주세요"));
+    }
     let core = Arc::clone(&core);
-    tauri::async_runtime::spawn_blocking(move || match mode.as_str() {
+    let r = tauri::async_runtime::spawn_blocking(move || match mode.as_str() {
         "start" => Ok(workspace::run_start(&core)),
         "away" => Ok(workspace::run_away(&core)),
         "end" => Ok(workspace::run_end(&core)),
         _ => Err(AppError::invalid("알 수 없는 모드")),
     })
     .await
-    .map_err(|e| AppError::new("TASK_FAILED", e.to_string()))?
+    .map_err(|e| AppError::new("TASK_FAILED", e.to_string()));
+    MODE_RUNNING.store(false, Ordering::SeqCst);
+    r?
 }
 
 #[tauri::command]
@@ -215,6 +223,16 @@ pub fn capture_gen(app: AppHandle) -> u64 {
 #[tauri::command]
 pub fn image_copy(app: AppHandle, data: String) -> AppResult<()> {
     capture::copy_to_clipboard(&app, &data)
+}
+
+/// 텍스트 복사는 웹뷰의 navigator.clipboard 대신 OS 클립보드로(창 포커스와 무관하게 동작)
+#[tauri::command]
+pub fn text_copy(app: AppHandle, text: String) -> AppResult<()> {
+    use tauri_plugin_clipboard_manager::ClipboardExt;
+    if text.len() > 50 * 1024 * 1024 {
+        return Err(AppError::invalid("복사할 내용이 너무 큽니다"));
+    }
+    app.clipboard().write_text(text).map_err(|e| AppError::new("CLIPBOARD_FAILED", format!("클립보드 복사 실패: {e}")))
 }
 
 #[tauri::command]

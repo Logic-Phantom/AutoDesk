@@ -1,12 +1,11 @@
 // Capture Studio 편집기: 화살표·사각형·형광펜·번호·텍스트·모자이크·자르기·크기 변경·OCR·복사·저장.
 // 원본 캡처는 메모리에만 있고, 사용자가 저장/복사할 때만 밖으로 나간다.
 import { listen } from '@tauri-apps/api/event';
-import { getCurrentWindow } from '@tauri-apps/api/window';
 import { save } from '@tauri-apps/plugin-dialog';
 import {
   ArrowUpRight, Copy, Crop, Download, Grid3x3, Hash, Highlighter, Redo2, ScanText, Scissors, Square, Type, Undo2, X, Circle,
 } from 'lucide-react';
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { errorMessage } from '../lib/api';
 import { tools } from '../lib/toolsApi';
 
@@ -184,12 +183,11 @@ export function Editor() {
     load();
     // 편집기가 열린 채로 새 캡처를 하면 같은 창에서 다시 불러온다
     const un1 = listen('capture://updated', () => { load(); });
-    // 편집 창을 닫으면 '이 창이 보던' 캡처만 메모리에서 지운다
-    const un2 = getCurrentWindow().onCloseRequested(() => { tools.captureClear(genRef.current); });
+    // 편집 창을 닫으면 Rust(창 Destroyed 이벤트)가 '이 창이 보던' 캡처만 메모리에서 지운다.
+    // (JS onCloseRequested를 쓰면 창 destroy 권한이 필요해 X 버튼이 동작하지 않는다)
     return () => {
       if (url) URL.revokeObjectURL(url);
       un1.then((f) => f());
-      un2.then((f) => f());
     };
   }, []);
 
@@ -197,15 +195,28 @@ export function Editor() {
   const undo = useCallback(() => dispatch({ type: 'undo' }), []);
   const redo = useCallback(() => dispatch({ type: 'redo' }), []);
 
+  // 확정된 그림(원본 + 도형·모자이크)은 바뀔 때만 한 번 그려 캐시한다.
+  // 드래그 중에는 캐시 + 그리는 중인 도형만 다시 그려서 4K 캡처에서도 끊기지 않게 한다.
+  const committed = useMemo(() => {
+    if (!img) return null;
+    const cache = document.createElement('canvas');
+    cache.width = img.naturalWidth;
+    cache.height = img.naturalHeight;
+    const cctx = cache.getContext('2d')!;
+    cctx.drawImage(img, 0, 0);
+    doc.shapes.forEach((s) => drawShape(cctx, s, img));
+    return cache;
+  }, [img, doc.shapes]);
+
   // 화면 그리기(원본 해상도 캔버스, CSS로 축소 표시)
   useEffect(() => {
     const c = canvasRef.current;
-    if (!c || !img) return;
-    c.width = img.naturalWidth;
-    c.height = img.naturalHeight;
+    if (!c || !img || !committed) return;
+    if (c.width !== img.naturalWidth) c.width = img.naturalWidth;
+    if (c.height !== img.naturalHeight) c.height = img.naturalHeight;
     const ctx = c.getContext('2d')!;
-    ctx.drawImage(img, 0, 0);
-    [...doc.shapes, ...(draft ? [draft] : [])].forEach((s) => drawShape(ctx, s, img));
+    ctx.drawImage(committed, 0, 0);
+    if (draft) drawShape(ctx, draft, img);
     const crop = cropDraft ?? doc.crop;
     if (crop && crop.w > 2) {
       ctx.save();
@@ -220,7 +231,7 @@ export function Editor() {
       ctx.strokeRect(crop.x, crop.y, crop.w, crop.h);
       ctx.restore();
     }
-  }, [img, doc, draft, cropDraft]);
+  }, [img, committed, doc.crop, draft, cropDraft]);
 
   const toImg = (e: React.MouseEvent) => {
     const c = canvasRef.current!;
@@ -430,7 +441,7 @@ export function Editor() {
             {ocr.text !== null && (
               <>
                 <textarea className="input" value={ocr.text} onChange={(e) => setOcr({ ...ocr, text: e.target.value })} spellCheck={false} />
-                <button className="btn primary" onClick={() => navigator.clipboard.writeText(ocr.text ?? '').then(() => flash('텍스트를 복사했습니다'))}><Copy size={14} /> 텍스트 복사</button>
+                <button className="btn primary" onClick={() => tools.textCopy(ocr.text ?? '').then(() => flash('텍스트를 복사했습니다'))}><Copy size={14} /> 텍스트 복사</button>
                 <p className="muted small">Windows 내장 OCR로 PC 안에서 인식했습니다. 자르기로 영역을 좁히면 더 정확합니다.</p>
               </>
             )}

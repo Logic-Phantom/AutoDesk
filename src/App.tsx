@@ -38,9 +38,15 @@ function loadTheme(): Theme {
   return 'system';
 }
 
+function initialPage(): Page {
+  // 트레이에서 특정 화면으로 열 때 창을 새로 만들며 ?page= 로 전달된다
+  const p = new URLSearchParams(window.location.search).get('page');
+  return NAV.some((n) => n.id === p) ? (p as Page) : 'dashboard';
+}
+
 export default function App() {
   const { data, error } = useOverview();
-  const [page, setPage] = useState<Page>('dashboard');
+  const [page, setPage] = useState<Page>(initialPage);
   const [theme, setThemeState] = useState<Theme>(loadTheme);
 
   useEffect(() => {

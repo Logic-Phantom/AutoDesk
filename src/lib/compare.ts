@@ -52,11 +52,36 @@ export function inlineDiff(a: string, b: string, o: Options): { left: Seg[]; rig
 }
 
 /** 두 줄이 '수정'으로 묶일 만큼 비슷한지(공통 글자 비율) */
+/** 글자 2개씩 묶은 조각(bigram) 집합 — 줄 유사도를 빠르게(O(길이)) 계산하는 데 쓴다 */
+function bigrams(s: string): Map<string, number> {
+  const m = new Map<string, number>();
+  const t = s.replace(/\s+/g, ' ').trim();
+  if (t.length === 1) m.set(t, 1);
+  for (let i = 0; i < t.length - 1; i++) {
+    const g = t.slice(i, i + 2);
+    m.set(g, (m.get(g) ?? 0) + 1);
+  }
+  return m;
+}
+
+function dice(x: Map<string, number>, y: Map<string, number>): number {
+  let sx = 0;
+  let sy = 0;
+  let common = 0;
+  for (const v of x.values()) sx += v;
+  for (const v of y.values()) sy += v;
+  if (sx === 0 && sy === 0) return 1;
+  for (const [k, v] of x) {
+    const w = y.get(k);
+    if (w) common += Math.min(v, w);
+  }
+  return (2 * common) / (sx + sy || 1);
+}
+
+/** 두 줄이 '수정'으로 묶일 만큼 비슷한지(0~1). 큰 문서에서도 빠르도록 bigram Dice 계수 사용 */
 export function similarity(a: string, b: string): number {
-  if (!a && !b) return 1;
-  const parts = diffChars(a, b);
-  const common = parts.filter((p) => !p.added && !p.removed).reduce((n, p) => n + p.value.length, 0);
-  return (2 * common) / (a.length + b.length || 1);
+  if (a === b) return 1;
+  return dice(bigrams(a), bigrams(b));
 }
 
 const MATCH_MIN = 0.35;
@@ -67,7 +92,7 @@ const MATCH_MIN = 0.35;
  */
 export function alignBlock(a: string[], b: string[]): [number | null, number | null][] {
   const out: [number | null, number | null][] = [];
-  if (a.length * b.length > 40000) {
+  if (a.length * b.length > 250000) {
     const m = Math.max(a.length, b.length);
     for (let k = 0; k < m; k++) {
       if (k < a.length && k < b.length && similarity(a[k], b[k]) >= MATCH_MIN) out.push([k, k]);
@@ -78,7 +103,9 @@ export function alignBlock(a: string[], b: string[]): [number | null, number | n
     }
     return out;
   }
-  const sim = a.map((x) => b.map((y) => similarity(x, y)));
+  const ga = a.map(bigrams);
+  const gb = b.map(bigrams);
+  const sim = ga.map((x) => gb.map((y) => dice(x, y)));
   const dp = Array.from({ length: a.length + 1 }, () => new Array<number>(b.length + 1).fill(0));
   for (let i = 1; i <= a.length; i++) {
     for (let j = 1; j <= b.length; j++) {

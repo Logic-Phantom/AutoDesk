@@ -98,6 +98,7 @@ export const tools = {
   captureClear: (gen?: number) => invoke<void>('capture_clear', { gen }),
   captureGen: () => invoke<number>('capture_gen'),
   imageCopy: (data: string) => invoke<void>('image_copy', { data }),
+  textCopy: (text: string) => invoke<void>('text_copy', { text }),
   imageSave: (path: string, data: string) => invoke<void>('image_save', { path, data }),
   ocr: (data: string) => invoke<string>('ocr_image', { data }),
   readText: (path: string) => invoke<string>('read_text_file', { path }),

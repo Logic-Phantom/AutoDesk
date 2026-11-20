@@ -1,6 +1,6 @@
 [package]
 name = "autodesk"
-version = "0.3.0"
+version = "0.3.1"
 description = "AutoDesk — personal desktop automation engine"
 authors = ["Logic-Phantom"]
 license = "MIT"

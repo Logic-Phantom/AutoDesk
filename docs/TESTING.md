@@ -4,7 +4,7 @@
 
 ```bash
 npm run test:rust   # Rust 44개
-npm test            # Vitest 21개
+npm test            # Vitest 22개
 npm run typecheck && npm run lint
 ```
 

@@ -110,7 +110,7 @@ body.push(
   new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ type: 'png', data: fs.readFileSync('C:/eclipse_AI/AutoDesk/src-tauri/icons/128x128.png'), transformation: { width: 96, height: 96 }, altText: { title: 'AutoDesk', description: 'AutoDesk 아이콘', name: 'icon' } })] }),
   new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 240, after: 120 }, children: [t('AutoDesk 사용 설명서', { bold: true, size: 56 })] }),
   new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 600 }, children: [t('내 PC에 상주하며 반복 작업을 조용히 처리하는 개인용 자동화 앱', { size: 24, color: '646B75' })] }),
-  new Paragraph({ alignment: AlignmentType.CENTER, children: [t('버전 0.3.0 · 2026년 11월 20일', { size: 20, color: '646B75' })] }),
+  new Paragraph({ alignment: AlignmentType.CENTER, children: [t('버전 0.3.1 · 2026년 11월 20일', { size: 20, color: '646B75' })] }),
   new Paragraph({ alignment: AlignmentType.CENTER, children: [t('Windows 10/11 · macOS 11 이상', { size: 20, color: '646B75' })] }),
   new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 1800 }, children: [t('github.com/Logic-Phantom/AutoDesk', { size: 18, color: ACCENT })] }),
 );
@@ -482,7 +482,7 @@ body.push(...WARN(['macOS에서 앱을 Finder로 휴지통에 버리기만 하�
 body.push(H1('12. 자주 묻는 질문'));
 const faq = [
   ['백그라운드에서 몰래 계속 도는 건 아닌가요?', '프로세스는 `AutoDesk.exe` 하나뿐입니다. 트레이의 "프로그램 종료"나 백그라운드 상주를 끈 뒤 창을 닫으면 완전히 꺼지고, 작업 관리자에도 남지 않습니다. 서비스나 예약 작업을 설치하지 않습니다.'],
-  ['PC가 느려지지 않나요?', '파일 변경을 OS 이벤트로만 받아 처리하므로 평소엔 거의 쉬고 있습니다(측정 시 메모리 약 34MB). 큰 파일은 크기 제한으로 건너뜁니다.'],
+  ['PC가 느려지지 않나요?', '파일 변경을 OS 이벤트로만 받아 처리하므로 평소엔 거의 쉬고 있습니다(측정: 유휴 CPU 0.2% 미만). 메모리는 AutoDesk 본체 30~45MB에 화면(WebView2)까지 합쳐 약 140~180MB이고, 창을 닫아 트레이에 두면 화면 메모리를 돌려줍니다. 큰 파일은 크기 제한으로 건너뜁니다.'],
   ['파일을 저장했는데 버전이 안 생겨요.', '① 전체 자동화와 AutoBackup이 "작동 중"인지 ② 그 확장자가 백업 대상인지 ③ 제외 패턴에 걸리지 않는지 ④ 내용이 실제로 바뀌었는지 확인하세요. 같은 내용 재저장은 버전을 만들지 않습니다.'],
   ['다운로드한 파일이 그대로 있어요.', '기본은 미리보기 모드라 승인 센터에서 "이동"을 눌러야 옮겨집니다. 바로 옮기려면 자동 이동(AUTO)을 켜세요.'],
   ['단축키를 눌러도 반응이 없어요.', '다른 프로그램이 같은 단축키를 쓰는지 확인하고 AutoPaste 패널에서 단축키를 바꾸세요. 이미지나 파일을 복사한 경우는 건드리지 않습니다.'],
@@ -503,7 +503,7 @@ const doc = new Document({
   creator: 'Logic-Phantom',
   lastModifiedBy: 'Logic-Phantom',
   title: 'AutoDesk 사용 설명서',
-  description: 'AutoDesk v0.3.0 사용 설명서',
+  description: 'AutoDesk v0.3.1 사용 설명서',
   features: { updateFields: true },
   styles: {
     default: { document: { run: { font: FONT, size: 21 } } },

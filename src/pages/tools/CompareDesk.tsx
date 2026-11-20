@@ -1,6 +1,6 @@
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { ArrowDown, ArrowUp, ArrowLeftRight, Copy, FileDown, FolderOpen } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useDeferredValue, useMemo, useRef, useState } from 'react';
 import { changesText, compareCsv, compareLines, reportHtml, type Options, type Seg } from '../../lib/compare';
 import { errorMessage } from '../../lib/api';
 import { fileName, tools } from '../../lib/toolsApi';
@@ -29,8 +29,11 @@ export function CompareDesk() {
   const tableRef = useRef<HTMLDivElement>(null);
   const { message, run, setMessage } = useAction();
 
-  const textResult = useMemo(() => (mode === 'text' && (left.text || right.text) ? compareLines(left.text, right.text, opt) : null), [mode, left.text, right.text, opt]);
-  const csvResult = useMemo(() => (mode === 'csv' && (left.text || right.text) ? compareCsv(left.text, right.text, keyCol, opt) : null), [mode, left.text, right.text, keyCol, opt]);
+  // 큰 문서를 입력하는 동안 매 글자마다 비교하지 않도록 지연된 값으로 계산
+  const lt = useDeferredValue(left.text);
+  const rt = useDeferredValue(right.text);
+  const textResult = useMemo(() => (mode === 'text' && (lt || rt) ? compareLines(lt, rt, opt) : null), [mode, lt, rt, opt]);
+  const csvResult = useMemo(() => (mode === 'csv' && (lt || rt) ? compareCsv(lt, rt, keyCol, opt) : null), [mode, lt, rt, keyCol, opt]);
   const stats = textResult?.stats ?? csvResult?.stats;
   const changeIdx = useMemo(() => (textResult ? textResult.rows.map((r, i) => (r.kind !== 'same' ? i : -1)).filter((i) => i >= 0) : []), [textResult]);
 
@@ -127,7 +130,7 @@ export function CompareDesk() {
           <>
             <button className="icon-btn" title="이전 변경" aria-label="이전 변경" onClick={() => jump(-1)}><ArrowUp size={16} /></button>
             <button className="icon-btn" title="다음 변경" aria-label="다음 변경" onClick={() => jump(1)}><ArrowDown size={16} /></button>
-            <button className="btn small" disabled={!textResult} onClick={() => textResult && run(() => navigator.clipboard.writeText(changesText(textResult.rows)), '변경점을 복사했습니다')}>
+            <button className="btn small" disabled={!textResult} onClick={() => textResult && run(() => tools.textCopy(changesText(textResult.rows)), '변경점을 복사했습니다')}>
               <Copy size={14} aria-hidden /> 변경점 복사
             </button>
             <button className="btn small" disabled={!textResult} onClick={saveReport}>

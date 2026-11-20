@@ -14,6 +14,8 @@ pub struct CaptureStore {
     pub png: Option<Vec<u8>>,
     /// 캡처할 때마다 증가. 이전 편집기가 닫히면서 최신 캡처를 지우지 않도록 구분한다.
     pub gen: u64,
+    /// 편집기가 마지막으로 불러온 캡처의 세대. 편집기가 닫히면 이 세대일 때만 지운다.
+    pub editor_gen: u64,
 }
 
 pub type CaptureState = Mutex<CaptureStore>;
@@ -196,7 +198,21 @@ fn open_overlay(app: &AppHandle, m: &xcap::Monitor) -> AppResult<()> {
     Ok(())
 }
 
+/// 편집기 창이 사라질 때(lib.rs의 창 이벤트) 호출: 그 편집기가 보던 캡처만 메모리에서 지운다.
+pub fn on_editor_closed(app: &AppHandle) {
+    let gen = app.try_state::<CaptureState>().map(|s| s.lock().unwrap_or_else(|e| e.into_inner()).editor_gen);
+    clear(app, gen);
+}
+
+fn mark_editor_gen(app: &AppHandle) {
+    if let Some(s) = app.try_state::<CaptureState>() {
+        let mut st = s.lock().unwrap_or_else(|e| e.into_inner());
+        st.editor_gen = st.gen;
+    }
+}
+
 pub fn open_editor(app: &AppHandle) -> AppResult<()> {
+    mark_editor_gen(app);
     // 이미 열린 편집기가 있으면 닫지 않고 새 캡처를 다시 불러오게 한다
     if let Some(e) = app.get_webview_window("editor") {
         use tauri::Emitter;

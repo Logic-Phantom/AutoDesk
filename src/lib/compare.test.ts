@@ -27,6 +27,17 @@ describe('compare desk', () => {
     expect(mod5.rightNo).toBe(3);
   });
 
+  it('stays fast on large changed blocks', () => {
+    const NL = String.fromCharCode(10);
+    const left = Array.from({ length: 400 }, (_, i) => `${i}번째 줄: 계약 조건 항목 ${i} 에 대한 설명 문장입니다. 금액은 ${i * 1000}원.`).join(NL);
+    const right = Array.from({ length: 400 }, (_, i) => `${i}번째 줄: 계약 조건 항목 ${i} 에 대한 수정된 설명 문장입니다. 금액은 ${i * 1100}원.`).join(NL);
+    const t0 = performance.now();
+    const { stats } = compareLines(left, right, opt);
+    const ms = performance.now() - t0;
+    expect(stats.modified).toBe(400);
+    expect(ms).toBeLessThan(3000);
+  });
+
   it('ignore whitespace and case options', () => {
     expect(compareLines('Hello  World', 'hello world', { ...opt, ignoreWhitespace: true, ignoreCase: true }).stats.same).toBe(1);
     expect(compareLines('Hello  World', 'hello world', opt).stats.modified).toBe(1);

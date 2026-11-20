@@ -116,7 +116,7 @@ export function TableConverter() {
         >
           <textarea className="input code-area" readOnly value={output} spellCheck={false} aria-label="변환 결과" />
           <div className="inline">
-            <button className="btn primary" disabled={!output} onClick={() => run(() => navigator.clipboard.writeText(output), '복사했습니다')}>
+            <button className="btn primary" disabled={!output} onClick={() => run(() => tools.textCopy(output), '복사했습니다')}>
               <Copy size={16} aria-hidden /> 복사
             </button>
             <button className="btn" disabled={!output} onClick={saveFile}>

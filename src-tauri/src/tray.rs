@@ -93,20 +93,28 @@ pub fn refresh(app: &AppHandle) {
 }
 
 pub fn show_main(app: &AppHandle, route: Option<&str>) {
-    if let Some(w) = app.get_webview_window("main") {
-        let _ = w.unminimize();
-        let _ = w.show();
-        let _ = w.set_focus();
-    } else {
-        let _ = crate::create_main_window(app);
-    }
     if let Some(core) = app.try_state::<Arc<Core>>() {
         core.update_runtime(|r| r.window_visible = true);
         core.notify_changed();
     }
-    if let Some(r) = route {
-        let _ = app.emit("core://navigate", r);
+    if let Some(w) = app.get_webview_window("main") {
+        let _ = w.unminimize();
+        let _ = w.show();
+        let _ = w.set_focus();
+        if let Some(r) = route {
+            let _ = app.emit("core://navigate", r);
+        }
+        return;
     }
+    // 창이 닫혀 있으면 새로 만든다. 메인 스레드를 막지 않도록 별도 스레드에서(Windows 교착 방지)
+    let app = app.clone();
+    let route = route.map(|r| r.to_string());
+    std::thread::spawn(move || {
+        if let Ok(w) = crate::create_main_window(&app, route.as_deref()) {
+            let _ = w.show();
+            let _ = w.set_focus();
+        }
+    });
 }
 
 fn handle_menu(app: &AppHandle, id: &str) {
