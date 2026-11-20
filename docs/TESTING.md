@@ -3,8 +3,8 @@
 ## 자동 테스트
 
 ```bash
-npm run test:rust   # Rust 38개
-npm test            # Vitest 4개
+npm run test:rust   # Rust 44개
+npm test            # Vitest 21개
 npm run typecheck && npm run lint
 ```
 
@@ -15,7 +15,10 @@ npm run typecheck && npm run lint
 | AutoBackup | 후보 필터, 실제 변경시에만 스냅샷(같은 내용 재저장 무시)·원본 불변·manifest, 보관 개수, 크기 제한, 텍스트 diff |
 | Download Butler | 확장자 규칙, 다운로드 중 임시 파일/숨김 파일 무시, 시그니처 판별·확장자 불일치 |
 | AutoPaste | 한글·영문 줄 끝 공백, NBSP·U+200B, 이모지 ZWJ 보존, 빈 줄 축소, 공백만 있는 줄, 코드 들여쓰기 보존, URL·경로 불변, CRLF 유지/변환, HTML 옵션, 빈/깨끗한 입력 |
-| LogWatcher | ERROR/WARN 감지, 같은 오류 지문(숫자·시간 무시), 스택 트레이스 문맥, 대소문자 옵션, 이전 청크 문맥, EUC-KR 해석, 미완성 줄 |
+| 업무 모드 | 따옴표 인자 분리, 보호 프로세스(explorer·AutoDesk) 거부, `javascript:`/`file:` 주소 거부 |
+| 도구(Rust) | DOCX 본문 추출, 저장 확장자 제한·BOM, 바이너리 파일 거부, 이미지 PNG→JPG 원본 보존, 리사이즈 모드 5종, 용량 제한 품질 탐색, 이름 충돌, OCR 2배 확대, 한글 글자 간 공백 붙이기 |
+| Table Converter | CSV 따옴표·줄바꿈, 형식 자동 감지, 엑셀 TSV→Markdown(파이프 이스케이프), CSV→JSON 타입·앞자리 0 보존, JSON 키 합집합, HTML colspan, TSV↔CSV, Markdown 역변환 |
+| Compare Desk | 같음/수정/추가/삭제 분류, 삭제·수정 혼합 시 최적 짝짓기, 공백·대소문자 무시, 글자 단위 강조, CSV 키 열 매칭, 리포트 이스케이프 |
 | AI | 응답 검증(빈 응답·과도한 길이 거부) |
 | 제거 | 삭제 대상 경로는 앱 식별자를 포함해야 함 |
 | UI | 형식 함수(바이트·시간·상태 색·단축키 표기) |

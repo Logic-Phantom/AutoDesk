@@ -1,4 +1,5 @@
-//! 전역 단축키(AutoPaste / AI 다듬기). 모듈이 실행 중일 때만 OS에 등록하고, 꺼지면 즉시 해제한다.
+//! 전역 단축키(AutoPaste / AI 다듬기 / 화면 캡처). 자동화 단축키는 모듈이 실행 중일 때만,
+//! 캡처 단축키는 도구 설정에서 켜 둔 동안만 OS에 등록한다.
 //! 클립보드는 단축키를 누른 순간에만 읽는다(상시 폴링 없음).
 
 use crate::core::Core;
@@ -13,6 +14,7 @@ use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutEvent, S
 pub struct Registered {
     pub paste: Option<Shortcut>,
     pub ai: Option<Shortcut>,
+    pub capture: Option<Shortcut>,
     pub busy: bool,
 }
 
@@ -24,6 +26,7 @@ pub fn unregister_all(app: &AppHandle) {
         let mut r = s.lock().unwrap_or_else(|e| e.into_inner());
         r.paste = None;
         r.ai = None;
+        r.capture = None;
     }
 }
 
@@ -38,9 +41,23 @@ pub fn sync(core: &Arc<Core>) {
     core.update_runtime(|r| {
         r.shortcut_error = None;
         r.ai_shortcut_error = None;
+        r.capture_shortcut_error = None;
     });
     let rt = core.runtime();
-    if !rt.master || rt.shutting_down {
+    if rt.shutting_down {
+        return;
+    }
+    // 화면 캡처는 자동화가 아니라 도구이므로 전체 자동화 스위치와 무관하게 동작한다.
+    let tools = crate::tools::tool_settings(core);
+    if tools.capture_shortcut_enabled {
+        if let Some(state) = app.try_state::<ShortcutRegistry>() {
+            match parse(&tools.capture_shortcut).and_then(|s| app.global_shortcut().register(s).map(|_| s).map_err(|e| e.to_string())) {
+                Ok(s) => state.lock().unwrap_or_else(|e| e.into_inner()).capture = Some(s),
+                Err(e) => core.update_runtime(|r| r.capture_shortcut_error = Some(format!("캡처 단축키 등록 실패: {e}"))),
+            }
+        }
+    }
+    if !rt.master {
         return;
     }
     let row = match crate::db::get_module(&core.db(), modules::AUTOPASTE) {
@@ -74,6 +91,15 @@ pub fn on_shortcut(app: &AppHandle, shortcut: &Shortcut, event: ShortcutEvent) {
     let core = Arc::clone(&core);
     let kind = {
         let mut r = state.lock().unwrap_or_else(|e| e.into_inner());
+        if r.capture.as_ref() == Some(shortcut) {
+            let app = app.clone();
+            std::thread::spawn(move || {
+                if let Err(e) = crate::tools::capture::start(&app, "region") {
+                    core.notify("캡처 실패", &e.message);
+                }
+            });
+            return;
+        }
         let kind = if r.paste.as_ref() == Some(shortcut) {
             "paste"
         } else if r.ai.as_ref() == Some(shortcut) {

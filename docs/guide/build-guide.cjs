@@ -26,7 +26,8 @@ function runs(s) {
   });
 }
 const P = (s, o = {}) => new Paragraph({ children: runs(s), spacing: { after: 120, line: 300 }, ...o });
-const H1 = (s, pageBreak = true) => new Paragraph({ heading: HeadingLevel.HEADING_1, pageBreakBefore: pageBreak, children: [t(s)] });
+let chapterNo = 0;
+const H1 = (s, pageBreak = true) => new Paragraph({ heading: HeadingLevel.HEADING_1, pageBreakBefore: pageBreak, children: [t(`${++chapterNo}. ${s.replace(/^\d+\.\s*/, '')}`)] });
 const H2 = (s) => new Paragraph({ heading: HeadingLevel.HEADING_2, children: [t(s)] });
 const H3 = (s) => new Paragraph({ heading: HeadingLevel.HEADING_3, children: [t(s)] });
 const bullets = (items) => items.map((s) => new Paragraph({ numbering: { reference: 'bullets', level: 0 }, children: runs(s), spacing: { after: 60, line: 290 } }));
@@ -40,13 +41,21 @@ function steps(items) {
   });
   return items.map((s) => new Paragraph({ numbering: { reference: ref, level: 0 }, children: runs(s), spacing: { after: 80, line: 290 } }));
 }
+let figNo = 0;
+function pngSize(buf) {
+  return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
+}
 function image(file, caption, w = 560) {
-  const h = Math.round((w * 720) / 1080);
+  const buf = fs.readFileSync(path.join(IMG, file));
+  const size = pngSize(buf);
+  const width = Math.min(w, size.w);
+  const h = Math.round((width * size.h) / size.w);
+  caption = `그림 ${++figNo}. ${caption.replace(/^그림 \d+\.\s*/, '')}`;
   return [
     new Paragraph({
       alignment: AlignmentType.CENTER,
       spacing: { before: 120, after: 60 },
-      children: [new ImageRun({ outline: { type: 'solidFill', solidFillType: 'rgb', value: 'D9DCE1' }, type: 'png', data: fs.readFileSync(path.join(IMG, file)), transformation: { width: w, height: h },
+      children: [new ImageRun({ outline: { type: 'solidFill', solidFillType: 'rgb', value: 'D9DCE1' }, type: 'png', data: buf, transformation: { width, height: h },
         altText: { title: caption, description: caption, name: file } })],
     }),
     new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 240 }, children: [t(caption, { size: 18, color: '646B75', italics: true })] }),
@@ -101,7 +110,7 @@ body.push(
   new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ type: 'png', data: fs.readFileSync('C:/eclipse_AI/AutoDesk/src-tauri/icons/128x128.png'), transformation: { width: 96, height: 96 }, altText: { title: 'AutoDesk', description: 'AutoDesk 아이콘', name: 'icon' } })] }),
   new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 240, after: 120 }, children: [t('AutoDesk 사용 설명서', { bold: true, size: 56 })] }),
   new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 600 }, children: [t('내 PC에 상주하며 반복 작업을 조용히 처리하는 개인용 자동화 앱', { size: 24, color: '646B75' })] }),
-  new Paragraph({ alignment: AlignmentType.CENTER, children: [t('버전 0.2.0 · 2026년 11월 19일', { size: 20, color: '646B75' })] }),
+  new Paragraph({ alignment: AlignmentType.CENTER, children: [t('버전 0.3.0 · 2026년 11월 20일', { size: 20, color: '646B75' })] }),
   new Paragraph({ alignment: AlignmentType.CENTER, children: [t('Windows 10/11 · macOS 11 이상', { size: 20, color: '646B75' })] }),
   new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 1800 }, children: [t('github.com/Logic-Phantom/AutoDesk', { size: 18, color: ACCENT })] }),
 );
@@ -119,9 +128,17 @@ body.push(table(['기능', '하는 일', '언제 동작하나'], [
   ['**AutoBackup Guardian**', '등록한 폴더의 파일 내용이 바뀌면 이전 버전을 보관합니다. 언제든 비교하고 되살릴 수 있습니다.', '파일을 저장할 때마다 자동'],
   ['**Download Butler**', '다운로드 폴더에 새 파일이 들어오면 PDF·오피스·이미지·영상 등 종류별 폴더로 정리합니다.', '새 파일이 들어올 때(기본은 승인 후 이동)'],
   ['**AutoPaste**', '복사한 텍스트의 줄 끝 공백, 보이지 않는 문자, 중복 빈 줄을 정리합니다.', '단축키 `Ctrl + Alt + Shift + V`를 누를 때만'],
-  ['**LogWatcher**', '선택한 로그 파일에 새로 쌓이는 줄에서 ERROR·Exception을 찾아, 같은 오류는 묶어서 알립니다.', '로그에 줄이 추가될 때마다 자동'],
   ['Claude Code 다듬기(선택)', '복사한 글의 맞춤법·띄어쓰기를 Claude로 교정합니다.', '직접 켠 뒤 `Ctrl + Alt + Shift + B`를 누를 때만'],
 ], [2300, 4426, 2300]));
+body.push(gap());
+body.push(P('여기에 더해, 필요할 때 여는 **도구 4가지**와 **업무 모드 버튼**이 있습니다. 도구는 열었을 때만 동작하고 백그라운드에서 돌지 않습니다.'));
+body.push(table(['도구', '하는 일'], [
+  ['**업무 모드**(화면 오른쪽 아래 버튼)', '업무 시작(프로그램·사이트 열기) · 자리 비움(화면 잠금) · 퇴근(서버 종료 스크립트 실행, 프로그램 정상 종료)을 한 번에'],
+  ['**Capture Studio**', '화면 영역·전체·창 캡처 → 화살표·도형·번호·텍스트·모자이크 → 복사·저장, OCR로 글자 추출'],
+  ['**Table Converter**', '엑셀·웹·CSV·JSON 표를 Markdown·HTML·CSV·TSV·JSON으로 변환'],
+  ['**Compare Desk**', '두 문서(TXT·MD·DOCX)나 CSV의 차이를 색으로 구분, HTML 리포트 저장'],
+  ['**Image Studio**', '여러 이미지를 한 번에 JPG·PNG·WEBP 변환, 크기 조절, 용량 맞춤'],
+], [2600, 6426]));
 body.push(gap());
 body.push(H2('꼭 알아둘 원칙'));
 body.push(...bullets([
@@ -151,7 +168,7 @@ body.push(...WARN(['macOS 버전은 아직 실기기에서 검증하지 않았�
 
 // 3. 화면 구성
 body.push(H1('3. 화면 둘러보기'));
-body.push(P('왼쪽 메뉴는 **대시보드 · 자동화 · 이력 · 승인 센터 · 설정** 다섯 개입니다. 승인 센터 옆 숫자는 확인을 기다리는 작업 수, 왼쪽 아래 점은 현재 상태(초록 = 실행 중)입니다.'));
+body.push(P('왼쪽 메뉴 위쪽은 **대시보드 · 자동화 · 이력 · 승인 센터 · 업무 모드**, 아래 **도구** 묶음은 **Capture Studio · Table Converter · Compare Desk · Image Studio**, 맨 아래가 **설정**입니다. 승인 센터 옆 숫자는 확인을 기다리는 작업 수, 왼쪽 아래 점은 현재 상태(초록 = 실행 중)입니다.'));
 body.push(...image('01-dashboard.png', '그림 1. 대시보드 — 전체 상태를 한눈에 확인'));
 body.push(table(['영역', '의미'], [
   ['전체 자동화 스위치', '끄면 모든 감시와 단축키가 즉시 멈춥니다. 설정과 대기 작업은 그대로 남습니다.'],
@@ -203,6 +220,34 @@ body.push(table(['하고 싶은 것', '방법'], [
 body.push(gap());
 body.push(...TIP(['로그인 시 자동 실행은 백그라운드 상주가 켜져 있어야 의미가 있습니다. 백그라운드가 꺼진 상태에서 자동 실행을 켜면 "백그라운드도 함께 켤까요?"라고 묻습니다. 반대로 백그라운드를 끄면 자동 실행도 함께 해제됩니다.']));
 
+// 업무 모드
+body.push(H1('업무 모드 — 출근·자리 비움·퇴근을 버튼 하나로'));
+body.push(P('화면 오른쪽 아래에 작은 **A** 버튼이 떠 있습니다. 누르면 세 가지 모드 버튼이 펼쳐집니다. 항상 다른 창 위에 있고, 작업 표시줄 위 여백에 붙어 있어 방해가 되지 않습니다.'));
+body.push(...image('17-dock.png', '업무 모드 버튼 — 업무 시작 · 자리 비움 · 퇴근', 420));
+body.push(table(['버튼', '하는 일'], [
+  ['**업무 시작**', '등록한 프로그램·문서·폴더·웹사이트를 순서대로 엽니다. 꺼져 있던 자동화도 다시 켭니다(선택).'],
+  ['**자리 비움**', '화면을 잠그거나(Win+L과 같음) 모니터만 끕니다. 자동화를 잠시 멈출 수도 있습니다.'],
+  ['**퇴근**', '먼저 정리 명령(예: Tomcat 종료 스크립트)을 실행하고, 등록한 프로그램에 정상 종료를 요청한 뒤, 마지막에 화면 잠금이나 PC 종료를 합니다.'],
+], [1800, 7226]));
+body.push(gap());
+body.push(H2('설정하기'));
+body.push(...steps([
+  '왼쪽 메뉴 **업무 모드**를 엽니다(또는 버튼 옆 ⚙ 아이콘).',
+  '**업무 시작**에 **+ 프로그램 / + 문서 / + 폴더** 버튼이나 웹 주소 입력으로 항목을 추가합니다. 화살표로 여는 순서를 바꿀 수 있습니다.',
+  '**퇴근**의 ‘정리 명령’에 서버 종료 스크립트(`shutdown.bat` 등)를, ‘닫을 프로그램’에 크롬·엑셀·이클립스처럼 닫을 프로그램을 추가합니다. "지금 실행 중인 프로그램에서 고르기"를 쓰면 이름을 몰라도 됩니다.',
+  '오른쪽 위 **저장**을 누릅니다. 각 모드 옆 **지금 실행**으로 바로 시험해 볼 수 있습니다.',
+]));
+body.push(...image('15-workspace.png', '업무 모드 설정 — 업무 시작 때 열 항목'));
+body.push(...image('16-workspace-end.png', '퇴근 설정 — 정리 명령, 닫을 프로그램, 마무리 동작'));
+body.push(H2('퇴근할 때 저장은 어떻게 되나요?'));
+body.push(P('AutoDesk는 문서를 **대신 저장하지 않습니다.** 대신 각 프로그램에 "정상 종료"를 요청합니다. 저장하지 않은 문서가 있으면 엑셀·워드 같은 프로그램이 **직접 "저장할까요?"를 묻기** 때문에 내용이 사라지지 않습니다(Windows 11 메모장은 저장 안 된 탭을 자동 보관합니다). 퇴근 버튼을 누르면 실행 전에 무엇을 닫을지 먼저 보여줍니다.'));
+body.push(...image('17-dock-end.png', '퇴근 확인 — 실행 전에 닫을 항목을 보여줌', 340));
+body.push(...WARN([
+  '**응답 없으면 강제 종료**는 기본으로 꺼져 있습니다. 켜면 저장 확인 창이 떠 있는 프로그램도 닫혀 내용이 사라질 수 있습니다.',
+  '**PC 종료**를 고르면 모든 프로그램이 닫혔을 때만 60초 뒤 종료합니다. 하나라도 남아 있으면 종료를 건너뜁니다. 결과 창의 **PC 종료 취소**로 취소할 수 있습니다.',
+  '탐색기·시스템 프로세스·AutoDesk 자신은 닫을 목록에 넣을 수 없습니다.',
+]));
+
 // 5. AutoBackup
 body.push(H1('5. AutoBackup Guardian — 파일 버전 자동 보관'));
 body.push(P('실수로 내용을 지우고 저장했거나, 어제 버전이 더 나았을 때 되돌릴 수 있게 해 줍니다. 파일 내용이 **실제로 바뀐 경우에만** 새 버전을 만들기 때문에 같은 내용으로 여러 번 저장해도 버전이 늘지 않습니다.'));
@@ -220,7 +265,7 @@ body.push(table(['항목', '기본값', '설명'], [
   ['최대 파일 크기', '50 MB', '이보다 큰 파일은 건너뜀(이력에 "크기 제한 초과" 표시)'],
   ['전체 백업 용량 제한', '2048 MB', '넘으면 오래된 버전부터 정리. 파일마다 최신 버전 1개는 항상 남김'],
   ['백업할 확장자', '문서·코드 위주', 'txt, md, docx, xlsx, pptx, hwp, js, java, py 등. 비우면 모든 파일'],
-  ['제외 패턴', '임시 파일 등', '`~$*`, `*.tmp`, `node_modules/**, `.git/** 등은 백업하지 않음'],
+  ['제외 패턴', '임시 파일 등', '`~$*`, `*.tmp`, `node_modules/**`, `.git/**` 등은 백업하지 않음'],
 ], [2500, 1600, 4926]));
 body.push(gap());
 body.push(...WARN(['드라이브 전체(C:\\)나 Windows·Program Files 같은 시스템 폴더, AutoDesk 데이터 폴더는 등록할 수 없습니다. 꼭 필요한 작업 폴더만 등록하세요.']));
@@ -312,33 +357,83 @@ body.push(...WARN([
   '원문과 결과는 AutoDesk 로그·DB에 저장되지 않습니다. 결과가 비었거나 지나치게 길면 적용하지 않고 원문을 유지합니다.',
 ]));
 
-// 8. LogWatcher
-body.push(H1('8. LogWatcher — 로그 오류 감시'));
-body.push(P('서버나 개발 도구가 남기는 로그 파일을 등록해 두면, 새로 쌓이는 줄에서 **ERROR·Exception·SEVERE** 같은 문구를 찾아 알려 줍니다. 로그는 PC 안에서만 분석하고 밖으로 보내지 않습니다.'));
-body.push(H2('로그 파일 등록하기'));
+// Capture Studio
+body.push(H1('Capture Studio — 화면 캡처와 편집'));
+body.push(P('업무 화면을 설명하거나 문제 상황을 전달할 때 씁니다. 캡처한 이미지는 **저장하거나 복사하기 전까지 메모리에만** 있고, 편집 창을 닫으면 지워집니다.'));
 body.push(...steps([
-  '**자동화** 화면에서 **LogWatcher**를 펼치고 **로그 파일 추가**를 누릅니다.',
-  '감시할 파일(예: `catalina.out`, `server.log`, `JeusServer.log`)을 고릅니다. 폴더가 아니라 **파일**을 고릅니다.',
-  '등록한 **뒤에** 쌓이는 줄만 검사합니다. 이미 있던 내용은 오류로 세지 않습니다.',
-  '서버가 사용하는 로그 종류에 맞춰 **패턴 묶음**(일반 · Tomcat · JEUS/WebtoB)을 누르면 감지 문구가 한 번에 바뀝니다.',
+  '**Ctrl + Alt + Shift + S**를 누르면 화면이 어두워지고 십자선이 나타납니다. 원하는 부분을 드래그하면 그 영역이 편집기로 열립니다(클릭만 하면 화면 전체, Esc나 우클릭은 취소).',
+  '또는 왼쪽 메뉴 **Capture Studio**에서 ‘영역 캡처 · 화면 전체 · 창 캡처’를 고릅니다. 트레이 메뉴의 **화면 캡처(영역)**도 같습니다.',
+  '편집기에서 화살표·사각형·원·형광펜·번호·텍스트·모자이크로 표시합니다. 번호는 누를 때마다 1, 2, 3…으로 늘어납니다.',
+  '**복사**(Ctrl+C)하면 메신저·메일에 바로 붙여넣을 수 있고, **저장**(Ctrl+S)으로 PNG·JPG 파일을 만듭니다.',
 ]));
-body.push(...image('13-logwatch.png', '그림 9. LogWatcher — 로그 파일과 감지 규칙'));
-body.push(H2('어떻게 감지하나'));
-body.push(table(['상황', '동작'], [
-  ['ERROR·FATAL·SEVERE·Exception', '오류로 기록하고 알림'],
-  ['WARN·WARNING', '경고로 기록(알림은 "경고도 알림"을 켰을 때만)'],
-  ['같은 오류가 반복', '시간·숫자·ID만 다른 같은 오류는 하나로 묶어 **횟수**만 늘림. 다시 알림은 설정한 간격(기본 30분)이 지난 뒤에만'],
-  ['스택 트레이스', '`at …`, `Caused by:` 줄은 따로 세지 않고 앞 오류의 **문맥**으로 붙여 보관'],
-  ['줄이 아직 덜 써짐', '줄바꿈이 올 때까지 기다렸다가 읽음'],
-  ['로그 파일이 새로 시작(로테이션)', '파일이 작아진 것을 감지해 처음부터 다시 읽음'],
-  ['한글 로그', 'UTF-8과 EUC-KR(국내 WAS 기본) 모두 읽음'],
-  ['LogWatcher를 껐다 켬', '꺼져 있던 동안 쌓인 줄도 이어서 검사(놓치지 않음)'],
+body.push(...image('18-capture.png', 'Capture Studio — 캡처 방식과 단축키'));
+body.push(...image('19-editor.png', '편집기 — 번호·사각형·화살표·텍스트, 왼쪽은 모자이크로 가림, 오른쪽은 글자 추출 결과'));
+body.push(table(['도구', '단축키', '설명'], [
+  ['화살표 · 사각형 · 원', 'A · R · E', '가리키거나 둘러싸서 강조'],
+  ['형광펜', 'H', '반투명 노란색으로 칠하기'],
+  ['번호', 'N', '클릭하는 곳에 ①②③ 순서 번호'],
+  ['텍스트', 'T', '클릭한 곳에 글자 입력(Enter로 확정, Shift+Enter 줄바꿈)'],
+  ['모자이크', 'M', '개인정보·비밀번호·이름을 가리기. 원래 내용이 복원되지 않음'],
+  ['자르기', 'C', '필요한 부분만 남기기(다시 누르면 해제 버튼)'],
+  ['실행 취소 · 다시 실행', 'Ctrl+Z · Ctrl+Y', '최근 50단계'],
+  ['저장 크기', '—', '25~200%로 줄이거나 키워 저장'],
+], [2600, 2000, 4426]));
+body.push(gap());
+body.push(H2('글자 추출(OCR)'));
+body.push(P('편집기의 **글자 추출**을 누르면 이미지 속 글자를 텍스트로 바꿔 오른쪽에 보여줍니다. **Windows에 내장된 OCR 엔진**을 써서 인터넷 없이 PC 안에서 처리하고, 작은 글씨는 자동으로 2배 확대해 인식합니다. 자르기로 영역을 좁히면 더 정확합니다.'));
+body.push(...TIP(['한국어가 인식되지 않으면 Windows 설정 → 시간 및 언어 → 언어 및 지역 → 한국어 → 언어 옵션에서 ‘광학 문자 인식’이 설치되어 있는지 확인하세요. macOS에서는 아직 OCR을 지원하지 않습니다.']));
+
+// Table Converter
+body.push(H1('Table Converter — 표 형식 바꾸기'));
+body.push(P('엑셀이나 웹페이지에서 복사한 표를 문서·메일·위키에 맞는 형식으로 바꿉니다. 붙여넣기만 하면 형식을 **자동으로 알아냅니다**(엑셀 복사 TSV · CSV · JSON · HTML 표 · Markdown 표).'));
+body.push(...steps([
+  '엑셀에서 셀 범위를 복사(Ctrl+C)한 뒤 왼쪽 **입력** 칸에 붙여넣습니다. 웹페이지의 표를 복사해도 됩니다(병합된 셀도 맞춰 읽음).',
+  '오른쪽 위에서 결과 형식을 고릅니다: Markdown · HTML · CSV · CSV(엑셀용) · TSV · JSON.',
+  '아래 **미리보기**에서 빼고 싶은 열·행의 체크를 해제합니다.',
+  '**복사**하거나 **파일로 저장**합니다.',
+]));
+body.push(...image('20-table.png', 'Table Converter — 엑셀에서 복사한 표를 Markdown으로'));
+body.push(table(['이럴 때', '고를 형식'], [
+  ['깃허브·노션·위키에 표 붙이기', 'Markdown 표'],
+  ['메일·웹페이지에 표 넣기', 'HTML 표'],
+  ['다른 프로그램에 데이터 넘기기', 'CSV 또는 JSON'],
+  ['엑셀에서 열었을 때 한글이 깨지지 않게', 'CSV (엑셀용, UTF-8 BOM)'],
+  ['엑셀에 다시 붙여넣기', 'TSV'],
+], [5000, 4026]));
+body.push(gap());
+body.push(...TIP(['JSON으로 바꿀 때 숫자·true/false는 실제 값으로 바뀌지만, `007`처럼 앞자리 0이 있는 코드는 문자로 유지됩니다.']));
+
+// Compare Desk
+body.push(H1('Compare Desk — 문서 비교'));
+body.push(P('계약서·안내문·설정 파일의 수정 전후를 비교합니다. 바뀐 줄은 노란색, 추가는 초록색, 삭제는 빨간색이고, 줄 안에서 바뀐 **글자나 단어만** 따로 강조합니다.'));
+body.push(...steps([
+  '왼쪽에 원본, 오른쪽에 수정본을 붙여넣거나 **파일 열기**로 엽니다(TXT·MD·CSV·DOCX 등, DOCX는 본문 텍스트만).',
+  '강조 단위를 **글자**(한국어 문장 수정 확인에 적합) 또는 **단어**로 고릅니다. 공백·대소문자 무시, 변경된 부분만 보기도 고를 수 있습니다.',
+  '↑ ↓ 버튼으로 다음 변경 위치로 이동합니다.',
+  '**변경점 복사**로 바뀐 줄만 텍스트로 복사하거나, **HTML 리포트**로 저장해 다른 사람에게 보냅니다.',
+]));
+body.push(...image('21-compare.png', 'Compare Desk — 수정 3 · 추가 1 · 삭제 1, 바뀐 글자만 강조'));
+body.push(H2('CSV 행 비교'));
+body.push(P('**CSV 행 비교**를 고르고 기준 열(예: 사번·주문번호)을 정하면, 행 순서가 달라도 같은 키끼리 맞춰 어떤 셀이 바뀌었는지(`이전 → 이후`) 보여줍니다.'));
+
+// Image Studio
+body.push(H1('Image Studio — 이미지 일괄 변환'));
+body.push(P('제출용·웹 업로드용 이미지를 한 번에 준비합니다. **원본은 그대로 두고** 별도 폴더(기본: 첫 이미지 폴더 안의 `AutoDesk 변환`)에 저장합니다. 휴대폰 사진의 회전 정보도 반영합니다.'));
+body.push(...steps([
+  '이미지를 화면으로 **끌어다 놓거나** **추가**를 눌러 고릅니다(최대 500개).',
+  '자주 쓰는 설정 버튼(웹 업로드 · 제출용 500KB 이하 · 썸네일 · PNG로 변환)을 누르거나 직접 고릅니다.',
+  '**N개 변환**을 누르면 진행률이 표시되고, 끝나면 변환 전후 용량을 비교해 줍니다. **폴더 열기**로 결과를 확인합니다.',
+]));
+body.push(...image('22-images.png', 'Image Studio — 이미지 목록과 변환 설정'));
+body.push(...image('23-images-result.png', '결과 — 파일별 전후 용량. 이 예처럼 화면 캡처 PNG는 JPG로 바꾸면 오히려 커질 수 있어 결과에서 바로 확인할 수 있음'));
+body.push(table(['설정', '설명'], [
+  ['최대 크기에 맞추기', '비율을 유지하며 지정한 가로·세로 안에 들어가게(작은 이미지는 키우지 않음)'],
+  ['정확한 크기로 자르기', '비율을 유지하고 넘치는 부분은 가운데 기준으로 잘라 정확히 맞춤(썸네일)'],
+  ['파일 용량 제한(KB)', 'JPG 품질을 자동으로 낮춰 목표 용량 이하로 맞춤'],
+  ['이름 뒤에 붙일 글자', '예: `_web` → `사진_web.jpg`. 같은 이름이 있으면 (2)를 붙여 덮어쓰지 않음'],
 ], [3000, 6026]));
 body.push(gap());
-body.push(H2('감지된 오류 확인하기'));
-body.push(P('패널 아래 **감지된 오류** 목록에 종류별로 횟수, 처음·최근 발생 시각, 파일 이름이 나옵니다. 항목을 누르면 오류 앞뒤 줄과 스택 트레이스가 펼쳐집니다(▶ 표시가 오류 줄). 확인이 끝나면 **확인함 — 목록 비우기**를 누르세요. 새 알림은 이력 화면에도 남습니다.'));
-body.push(...image('14-logwatch-issues.png', '그림 10. 감지된 오류 — 같은 오류는 횟수로 묶이고 스택 트레이스를 함께 보관'));
-body.push(...TIP(['오탐이 많으면 **대소문자 구분**을 켠 상태로 두고, 오류 문구를 서버 로그 형식에 맞게 좁히세요(예: `[ERROR]`). 문구는 쉼표로 구분해 입력하고 **패턴 저장**을 누릅니다.']))
+body.push(...TIP(['WEBP는 무손실로만 저장되어 용량이 크게 줄지 않을 수 있습니다. 용량을 줄이는 게 목적이면 JPG를 고르세요. 화면 캡처처럼 단색이 많은 PNG는 JPG로 바꾸면 오히려 커질 수 있습니다.']));
 
 // 9. 이력
 body.push(H1('9. 이력 — 무엇을 했는지 확인'));
@@ -392,7 +487,9 @@ const faq = [
   ['다운로드한 파일이 그대로 있어요.', '기본은 미리보기 모드라 승인 센터에서 "이동"을 눌러야 옮겨집니다. 바로 옮기려면 자동 이동(AUTO)을 켜세요.'],
   ['단축키를 눌러도 반응이 없어요.', '다른 프로그램이 같은 단축키를 쓰는지 확인하고 AutoPaste 패널에서 단축키를 바꾸세요. 이미지나 파일을 복사한 경우는 건드리지 않습니다.'],
   ['"오류로 정지"가 떴어요.', '같은 기능이 5번 연속 실패하면 그 기능만 멈춥니다. 이력에서 오류 코드를 확인하고 원인을 해결한 뒤 스위치를 껐다 켜세요.'],
-  ['로그 알림이 너무 많아요.', 'LogWatcher의 "같은 오류 다시 알림 간격"을 늘리거나, 오류 문구를 서버 형식에 맞게 좁히세요(예: `ERROR` 대신 `[ERROR]`). 경고 알림은 기본으로 꺼져 있습니다.'],
+  ['캡처 단축키가 동작하지 않아요.', 'Capture Studio의 단축키 칸에서 다른 조합으로 바꾸세요(다른 프로그램과 겹칠 수 있음). 캡처 단축키는 전체 자동화를 꺼도 동작합니다.'],
+  ['오른쪽 아래 버튼을 숨기고 싶어요.', '업무 모드 화면 맨 위 "플로팅 버튼 표시"를 끄세요. 트레이 메뉴의 "업무 모드 설정"으로 다시 켤 수 있습니다.'],
+  ['퇴근 버튼을 눌렀는데 엑셀이 안 닫혀요.', '저장하지 않은 문서가 있어서 엑셀이 저장 여부를 묻고 있는 상태입니다. 저장/저장 안 함을 고르면 닫힙니다.'],
   ['인터넷이 끊겨도 되나요?', '네. AI 다듬기를 제외한 모든 기능이 오프라인에서 동작합니다.'],
   ['데이터는 어디에 저장되나요?', '`%APPDATA%\\io.github.logicphantom.autodesk` 한 곳입니다(설정 → 앱 데이터 위치). 백업, DB, 로그가 모두 여기에 있습니다.'],
 ];
@@ -406,7 +503,7 @@ const doc = new Document({
   creator: 'Logic-Phantom',
   lastModifiedBy: 'Logic-Phantom',
   title: 'AutoDesk 사용 설명서',
-  description: 'AutoDesk v0.2.0 사용 설명서',
+  description: 'AutoDesk v0.3.0 사용 설명서',
   features: { updateFields: true },
   styles: {
     default: { document: { run: { font: FONT, size: 21 } } },

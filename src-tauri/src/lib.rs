@@ -13,7 +13,9 @@ mod modules;
 mod platform;
 mod shortcuts;
 mod tray;
+mod tools;
 mod uninstall;
+mod workspace;
 
 use crate::core::Core;
 use std::sync::{Arc, Mutex};
@@ -54,6 +56,7 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
         .plugin(
             tauri_plugin_autostart::Builder::new()
                 .app_name(platform::AUTOSTART_NAME)
@@ -66,6 +69,7 @@ pub fn run() {
                 .build(),
         )
         .manage::<shortcuts::ShortcutRegistry>(Mutex::new(shortcuts::Registered::default()))
+        .manage::<tools::capture::CaptureState>(Mutex::new(tools::capture::CaptureStore::default()))
         .setup(move |app| {
             if quit_requested {
                 // 실행 중인 인스턴스가 없을 때 --quit: 아무 것도 만들지 않고 끝낸다.
@@ -83,6 +87,7 @@ pub fn run() {
                 let _ = window.set_focus();
                 core.update_runtime(|r| r.window_visible = true);
             }
+            tools::sync_dock(&core);
             core.notify_changed();
             Ok(())
         })
@@ -135,13 +140,36 @@ pub fn run() {
             commands::restore_version,
             commands::get_settings,
             commands::set_setting,
-            commands::list_log_issues,
-            commands::clear_log_issues,
             commands::ai_status,
             commands::uninstall_preview,
             commands::uninstall_execute,
             commands::engine_debug,
             commands::quit_app,
+            tools::dock_set_size,
+            tools::workspace_get,
+            tools::workspace_set,
+            tools::workspace_run,
+            tools::workspace_preview_end,
+            tools::workspace_running_apps,
+            tools::workspace_cancel_shutdown,
+            tools::open_main,
+            tools::tool_settings_get,
+            tools::tool_settings_set,
+            tools::capture_start,
+            tools::capture_list_windows,
+            tools::capture_window,
+            tools::capture_crop,
+            tools::capture_cancel,
+            tools::capture_get,
+            tools::capture_clear,
+            tools::capture_gen,
+            tools::image_copy,
+            tools::image_save,
+            tools::ocr_image,
+            tools::read_text_file,
+            tools::save_text_file,
+            tools::image_batch,
+            tools::open_path,
         ])
         .build(tauri::generate_context!())
         .expect("AutoDesk 실행 실패")

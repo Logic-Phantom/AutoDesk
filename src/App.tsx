@@ -1,5 +1,5 @@
 import { listen } from '@tauri-apps/api/event';
-import { Bot, History, Inbox, LayoutDashboard, Settings as SettingsIcon } from 'lucide-react';
+import { Bot, Camera, Columns2, History, Images, Inbox, LayoutDashboard, Settings as SettingsIcon, Sunrise, Table2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { APP_STATUS_LABEL } from './lib/format';
 import { useOverview } from './lib/useCore';
@@ -8,13 +8,23 @@ import { Automations } from './pages/Automations';
 import { Activity } from './pages/Activity';
 import { Approvals } from './pages/Approvals';
 import { Settings, type Theme } from './pages/Settings';
+import { Workspace } from './pages/Workspace';
+import { CaptureStudio } from './pages/tools/CaptureStudio';
+import { TableConverter } from './pages/tools/TableConverter';
+import { CompareDesk } from './pages/tools/CompareDesk';
+import { ImageStudio } from './pages/tools/ImageStudio';
 
 const NAV = [
-  { id: 'dashboard', label: '대시보드', icon: LayoutDashboard },
-  { id: 'automations', label: '자동화', icon: Bot },
-  { id: 'activity', label: '이력', icon: History },
-  { id: 'approvals', label: '승인 센터', icon: Inbox },
-  { id: 'settings', label: '설정', icon: SettingsIcon },
+  { id: 'dashboard', label: '대시보드', icon: LayoutDashboard, group: '' },
+  { id: 'automations', label: '자동화', icon: Bot, group: '' },
+  { id: 'activity', label: '이력', icon: History, group: '' },
+  { id: 'approvals', label: '승인 센터', icon: Inbox, group: '' },
+  { id: 'workspace', label: '업무 모드', icon: Sunrise, group: '' },
+  { id: 'capture', label: 'Capture Studio', icon: Camera, group: '도구' },
+  { id: 'table', label: 'Table Converter', icon: Table2, group: '도구' },
+  { id: 'compare', label: 'Compare Desk', icon: Columns2, group: '도구' },
+  { id: 'images', label: 'Image Studio', icon: Images, group: '도구' },
+  { id: 'settings', label: '설정', icon: SettingsIcon, group: '-' },
 ] as const;
 type Page = (typeof NAV)[number]['id'];
 
@@ -68,12 +78,15 @@ export default function App() {
         <div className="brand">
           <span className="brand-mark" aria-hidden>A</span> AutoDesk
         </div>
-        {NAV.map(({ id, label, icon: Icon }) => (
-          <button key={id} className={`nav ${page === id ? 'active' : ''}`} onClick={() => setPage(id)} aria-current={page === id}>
+        {NAV.map(({ id, label, icon: Icon, group }, i) => (
+          <div key={id} className="nav-item">
+          {group && group !== NAV[i - 1]?.group && (group === '-' ? <div className="nav-sep" /> : <div className="nav-group">{group}</div>)}
+          <button className={`nav ${page === id ? 'active' : ''}`} onClick={() => setPage(id)} aria-current={page === id}>
             <Icon size={18} aria-hidden />
             <span>{label}</span>
             {id === 'approvals' && data.pendingApprovals > 0 && <span className="badge">{data.pendingApprovals}</span>}
           </button>
+          </div>
         ))}
         <div className={`sidebar-status ${data.masterEnabled ? 'on' : 'off'}`}>
           <span className="dot" aria-hidden /> {APP_STATUS_LABEL[data.status]}
@@ -84,6 +97,12 @@ export default function App() {
         {page === 'automations' && <Automations data={data} />}
         {page === 'activity' && <Activity tick={data} />}
         {page === 'approvals' && <Approvals tick={data} />}
+        {page === 'workspace' && <Workspace />}
+        {page === 'capture' && <CaptureStudio platform={data.platform} />}
+        {/* 도구 화면은 다른 메뉴로 가도 입력이 사라지지 않도록 숨김 처리만 한다 */}
+        <div hidden={page !== 'table'}><TableConverter /></div>
+        <div hidden={page !== 'compare'}><CompareDesk /></div>
+        <div hidden={page !== 'images'}><ImageStudio /></div>
         {page === 'settings' && <Settings data={data} theme={theme} setTheme={setTheme} />}
       </main>
     </div>

@@ -59,6 +59,8 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
     let sep2 = PredefinedMenuItem::separator(app)?;
     let approvals = MenuItem::with_id(app, "approvals", format!("확인 대기 {pending}건"), true, None::<&str>)?;
     let activity = MenuItem::with_id(app, "activity", "최근 처리 내역", true, None::<&str>)?;
+    let capture = MenuItem::with_id(app, "capture", "화면 캡처(영역)", true, None::<&str>)?;
+    let workspace = MenuItem::with_id(app, "workspace", "업무 모드 설정", true, None::<&str>)?;
     let settings = MenuItem::with_id(app, "settings", "설정", true, None::<&str>)?;
     let sep3 = PredefinedMenuItem::separator(app)?;
     let quit = MenuItem::with_id(app, "quit", "프로그램 종료", true, None::<&str>)?;
@@ -67,7 +69,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
     for i in &module_items {
         items.push(i);
     }
-    items.extend([&sep2 as &dyn tauri::menu::IsMenuItem<tauri::Wry>, &approvals, &activity, &settings, &sep3, &quit]);
+    items.extend([&sep2 as &dyn tauri::menu::IsMenuItem<tauri::Wry>, &capture, &workspace, &approvals, &activity, &settings, &sep3, &quit]);
     Menu::with_items(app, &items)
 }
 
@@ -114,6 +116,13 @@ fn handle_menu(app: &AppHandle, id: &str) {
         "approvals" => show_main(app, Some("approvals")),
         "activity" => show_main(app, Some("activity")),
         "settings" => show_main(app, Some("settings")),
+        "workspace" => show_main(app, Some("workspace")),
+        "capture" => {
+            let app = app.clone();
+            std::thread::spawn(move || {
+                let _ = crate::tools::capture::start(&app, "region");
+            });
+        }
         "master" => {
             let on = !core.runtime().master;
             let _ = core.set_master(on);

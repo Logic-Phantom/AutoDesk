@@ -1,10 +1,16 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "메인 창 최소 권한: 앱 명령 + 폴더 선택 대화상자만 허용. 클립보드·단축키·자동실행은 Rust에서만 다룬다.",
-  "windows": ["main"],
+  "description": "앱 창 최소 권한: 앱 명령 + 파일/폴더 선택·저장 대화상자. 클립보드·단축키·자동실행·프로세스 제어는 Rust에서만 다룬다.",
+  "windows": [
+    "main",
+    "dock",
+    "overlay",
+    "editor"
+  ],
   "permissions": [
     "core:default",
-    "dialog:allow-open"
+    "dialog:allow-open",
+    "dialog:allow-save"
   ]
 }

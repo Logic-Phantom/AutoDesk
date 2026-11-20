@@ -4,32 +4,52 @@
 
 **내 PC에 상주하면서 반복 작업을 조용히 처리하는 개인용 데스크톱 자동화 앱 (Windows · macOS).**
 
-평소처럼 파일을 저장하고, 다운로드하고, 복사하면 AutoDesk가 알아서 처리한다. 안전한 일은 바로 끝내고, 파일을 옮기는 것처럼 확인이 필요한 일은 승인 센터에 올린다.
+평소처럼 파일을 저장하고, 다운로드하고, 복사하면 AutoDesk가 알아서 처리한다. 안전한 일은 바로 끝내고, 파일을 옮기는 것처럼 확인이 필요한 일은 승인 센터에 올린다. 화면 오른쪽 아래 **업무 모드** 버튼으로 출근·자리 비움·퇴근을 한 번에 하고, 캡처·표 변환·문서 비교·이미지 변환 **도구**도 들어 있다.
 
 > - 완전 무료 · 개인용 · 오프라인 동작 · 텔레메트리 없음
 > - 관리자 권한/서비스/데몬 없음 — 프로세스는 `AutoDesk.exe` 하나
 > - 전체 · 모듈별 · 백그라운드 상주 · 로그인 자동 실행을 각각 켜고 끔
 > - 앱 안의 **완전 제거**로 자동 실행 등록·데이터·설치본까지 정리
 
-## 기능 (MVP)
+## 기능
+
+### 자동화(백그라운드)
 
 | 모듈 | 하는 일 | 안전장치 |
 |---|---|---|
 | **AutoBackup Guardian** | 등록한 폴더의 파일이 실제로 바뀌면(SHA-256 비교) 이전 버전을 보관. 버전 비교(diff)·복원 | 원본 미수정, 복원은 직접 실행, 덮어쓰기 복원 전 현재 상태 백업, 보관 개수·용량 제한 |
 | **Download Butler** | 다운로드 폴더에 새 파일이 오면 PDF/Office/Text/Images/Videos/Audio/Archives/Installers로 분류 | 기본은 미리보기(승인 후 이동), 덮어쓰기·삭제·실행 없음, 모든 이동 되돌리기 가능, 확장자-내용 불일치 시 승인 요청 |
 | **AutoPaste** | `Ctrl+Alt+Shift+V`(macOS `⌘⌥⇧V`)를 누르면 클립보드 텍스트의 줄 끝 공백·NBSP·보이지 않는 문자·중복 빈 줄 정리 | 단축키 누를 때만 읽음, 내용 저장 안 함, 코드·URL·이모지 결합 문자 보존 |
-| **LogWatcher** | 선택한 로그 파일에 새로 쌓이는 줄에서 ERROR·Exception·SEVERE를 감지해 알림. Tomcat·JEUS/WebtoB 패턴 묶음 | 같은 오류는 묶어서 횟수만 집계·재알림 간격, 스택 트레이스 보관, 로테이션·EUC-KR 대응, 로그는 외부 전송 없음 |
 | (선택) **Claude Code 다듬기** | `Ctrl+Alt+Shift+B`로 맞춤법·띄어쓰기 교정 | 기본 OFF, 외부 전송 동의 필요, 내 Claude 구독 플랜 사용(추가 요금·API 키 없음) |
+
+### 업무 모드(화면 오른쪽 아래 플로팅 버튼)
+
+| 버튼 | 하는 일 | 안전장치 |
+|---|---|---|
+| **업무 시작** | 등록한 프로그램·문서·폴더·웹사이트를 순서대로 열고, 꺼져 있던 자동화를 다시 켬 | 등록한 항목만 실행, 웹 주소는 http/https만 |
+| **자리 비움** | 화면 잠금(Win+L) 또는 모니터 끄기, 자동화 일시정지(선택) | — |
+| **퇴근** | 정리 명령(예: Tomcat `shutdown.bat`) 실행 → 등록한 프로그램에 **정상 종료** 요청 → 화면 잠금/PC 종료(선택) | 실행 전 닫을 항목 확인 창, 저장 안 된 문서는 각 프로그램이 직접 저장 여부를 물음, 강제 종료 기본 OFF, 시스템·탐색기·AutoDesk는 닫지 않음, 창이 남으면 PC 종료 건너뜀 |
+
+### 도구(필요할 때만 실행, 백그라운드에서 돌지 않음)
+
+| 도구 | 하는 일 | 특징 |
+|---|---|---|
+| **Capture Studio** | 영역·전체·창 캡처(`Ctrl+Alt+Shift+S`) → 화살표·사각형·원·형광펜·번호·텍스트·모자이크·자르기·크기 변경 → 복사·PNG/JPG 저장, **OCR 글자 추출** | 캡처는 메모리에만(저장 전 디스크에 남지 않음), OCR은 Windows 내장 엔진으로 로컬 처리(작은 글씨 자동 2배 확대) |
+| **Table Converter** | 엑셀·웹 표·CSV·TSV·JSON·Markdown을 자동 감지해 Markdown·HTML·CSV·엑셀용 CSV(BOM)·TSV·JSON으로 변환, 열/행 선택, 미리보기 | 엑셀/웹에서 복사한 서식 표(병합 셀)까지 해석, 앞자리 0 코드값 보존 |
+| **Compare Desk** | 두 문서(TXT·MD·DOCX 등)를 줄·단어·글자 단위로 비교, CSV는 기준 열로 행 매칭, 변경점 복사·HTML 리포트 | 삭제·수정이 섞여도 비슷한 줄끼리 최적으로 짝지음, UTF-8/EUC-KR 자동 |
+| **Image Studio** | 여러 이미지를 JPG·PNG·WEBP로 일괄 변환, 맞추기·자르기·비율 리사이즈, **목표 용량(KB) 자동 맞춤**, 전후 용량 비교, 드래그 앤 드롭 | 원본 보존(별도 폴더), 이름 충돌 시 `(2)`, EXIF 회전 반영 |
 
 ## 사용 설명서
 
-스크린샷으로 단계별 사용법을 정리한 설명서(28쪽): **[PDF](docs/guide/AutoDesk_사용설명서.pdf)** · **[Word](docs/guide/AutoDesk_사용설명서.docx)**
+스크린샷으로 단계별 사용법을 정리한 설명서(36쪽): **[PDF](docs/guide/AutoDesk_사용설명서.pdf)** · **[Word](docs/guide/AutoDesk_사용설명서.docx)**
 
 | 대시보드 | 승인 센터 |
 |---|---|
 | ![대시보드](docs/guide/images/01-dashboard.png) | ![승인 센터](docs/guide/images/08-approvals.png) |
-| **버전 기록·복원** | **완전 제거** |
-| ![버전 기록](docs/guide/images/04-backup-versions.png) | ![완전 제거](docs/guide/images/11-uninstall.png) |
+| **Capture Studio 편집기** | **Compare Desk** |
+| ![캡처 편집기](docs/guide/images/19-editor.png) | ![문서 비교](docs/guide/images/21-compare.png) |
+| **업무 모드 버튼** | **퇴근 확인** |
+| ![업무 모드](docs/guide/images/17-dock.png) | ![퇴근 확인](docs/guide/images/17-dock-end.png) |
 
 ## 설치
 
@@ -45,9 +65,11 @@
 1. **자동화 → AutoBackup**에서 폴더 추가 → 이후 저장할 때마다 버전이 쌓인다. 같은 화면 아래 **버전 기록 · 복원**.
 2. **Download Butler**는 켜자마자 미리보기 모드로 동작 → **승인 센터**에서 이동/그대로 두기. 믿을 만하면 자동 이동(AUTO)을 켠다. 되돌리기는 **이력**.
 3. 텍스트 복사 → `Ctrl+Alt+Shift+V` → 붙여넣기.
-4. **설정**: 백그라운드 상주(창 닫아도 트레이에 남음), 로그인 시 자동 실행, 알림, 테마, 완전 제거.
+4. **업무 모드**: 왼쪽 메뉴에서 시작할 프로그램·사이트, 퇴근 때 실행할 스크립트·닫을 프로그램을 등록 → 오른쪽 아래 버튼으로 실행.
+5. **도구**: `Ctrl+Alt+Shift+S`로 영역 캡처, 표·문서·이미지는 왼쪽 '도구' 메뉴에서.
+6. **설정**: 백그라운드 상주(창 닫아도 트레이에 남음), 로그인 시 자동 실행, 알림, 테마, 완전 제거.
 
-트레이 아이콘 메뉴에서 전체 자동화/모듈 ON·OFF, 승인 대기, 프로그램 종료를 바로 할 수 있다.
+트레이 아이콘 메뉴에서 전체 자동화/모듈 ON·OFF, 화면 캡처, 업무 모드 설정, 승인 대기, 프로그램 종료를 바로 할 수 있다.
 
 ## 켜고 끄기 · 완전히 끄기 · 제거
 
@@ -77,15 +99,21 @@ React UI ──invoke──▶ Rust Core (단일 프로세스)
    ▲                  ├─ Lifecycle / Master·Module 스위치 / 트레이
    └── core://changed ├─ 공유 Watch Service(notify) → debounce → jobs(idempotent) → 모듈
                       ├─ AutoBackup · Download Butler · AutoPaste(+Claude CLI)
-                      ├─ SQLite(마이그레이션) · JSON 로그
+                      ├─ 업무 모드(workspace): 실행·창 닫기 요청·잠금 ─▶ 플로팅 독 창
+                      ├─ 도구(tools): 캡처(xcap)+편집 창·OCR(Windows.Media.Ocr)·이미지(image)·파일 입출력(DOCX)
+                      ├─ SQLite(마이그레이션 v3) · JSON 로그
                       └─ Platform: autostart · 설치 위치 · 완전 제거 도우미
 ```
 
 ```text
 AutoDesk/
-├── src/                     React + TypeScript UI (Dashboard · Automations · Activity · Approvals · Settings)
+├── src/                     React + TypeScript UI (Dashboard · Automations · Activity · Approvals · Workspace · Settings)
+│   ├── pages/tools/         CaptureStudio · TableConverter · CompareDesk · ImageStudio
+│   ├── windows/             Dock(플로팅 버튼) · Overlay(영역 선택) · Editor(캡처 편집기)
+│   └── lib/                 table · compare(순수 로직 + 테스트) · api
 ├── src-tauri/
-│   ├── src/                 core · db · fsutil · shortcuts · tray · commands · platform · uninstall · ai
+│   ├── src/                 core · db · fsutil · shortcuts · tray · commands · platform · uninstall · ai · workspace
+│   │   ├── tools/           capture · ocr · images · files
 │   │   └── modules/         backup · downloads · autopaste
 │   ├── capabilities/        웹뷰 최소 권한
 │   ├── windows/hooks.nsh    NSIS 제거 훅(정상 종료 요청·자동 실행 값 삭제)
@@ -169,7 +197,7 @@ npm run tauri:build
 - 업데이트 설치 검증: 실행 중인 앱 위에 새 설치본을 설치하면 기존 앱이 정상 종료되고 설정·백업은 유지
 - CI: Windows·macOS 빌드 모두 성공
 
-### 2026-11-19 — v0.2.0 LogWatcher · Windows QA
+### 2026-11-19 — v0.2.0 LogWatcher · Windows QA (LogWatcher는 v0.3.0에서 제거)
 
 - **LogWatcher 모듈 추가**: 로그 파일의 새 줄만 읽기(offset 저장), ERROR/WARN 패턴, 같은 오류 지문으로 묶기(시간·숫자·16진수 무시), 재알림 간격, 스택 트레이스(`at`, `Caused by`)를 문맥으로 보관, 미완성 줄 대기, 로테이션 감지, EUC-KR 로그 해석, Tomcat·JEUS/WebtoB 패턴 묶음
 - DB 마이그레이션 v2(`log_offsets`, `log_issues`) — v1 설치본 위에 업데이트 설치 시 기존 데이터 유지 + 이전 DB 자동 백업(`autodesk.v1.bak`) 확인
@@ -177,17 +205,55 @@ npm run tauri:build
 - QA 중 고친 것: AUTO 모드에서 되돌린 파일이 다시 옮겨질 수 있던 문제(되돌린 내용은 건너뜀), 분류 경로 구분자 혼용(`Documents/PDF\…`), 반복 오류가 스택 트레이스 문맥을 덮어쓰던 문제
 - 설명서 28쪽으로 갱신(LogWatcher 장·FAQ 추가), 테스트 Rust 38개
 
+### 2026-11-20 — v0.3.0 업무 모드 · 도구 4종 (LogWatcher 제거)
+
+- **LogWatcher 제거**(요청): 코드·화면·설명서에서 삭제. 기존 설치본은 업데이트 시 DB 마이그레이션 v3가 남은 테이블·등록·이력을 자동 정리
+- **업무 모드 + 플로팅 버튼**: 화면 오른쪽 아래 투명 독(접힘 → 펼침 → 퇴근 확인/결과로 크기 자동 조절, 작업 표시줄 위 여백 고정). 업무 시작(프로그램·문서·폴더·URL 순서대로), 자리 비움(잠금/모니터 끄기), 퇴근(정리 스크립트 → 정상 종료 요청 → 잠금/PC 종료 예약·취소)
+- **Capture Studio**: 영역(전체 화면 오버레이 드래그)·전체·창 캡처, 편집기(화살표·사각형·원·형광펜·번호·텍스트·모자이크·자르기·크기·실행 취소 50단계), 클립보드 이미지 복사, PNG/JPG 저장, Windows 내장 OCR(로컬, 작은 글씨 2배 확대), 전역 단축키 `Ctrl+Alt+Shift+S`, 트레이 메뉴
+- **Table Converter / Compare Desk / Image Studio** 추가(위 기능 표 참고)
+- 원본 기획 검토 후 반영: 퇴근 시 강제 저장 대신 '정상 종료 요청'(프로그램이 직접 저장 여부 질문, 강제 종료 기본 OFF), 캡처는 디스크 임시 파일 없이 메모리만, OCR은 별도 엔진 설치 없이 Windows 내장 엔진, WebP는 무손실만 지원하므로 용량 목적이면 JPG 안내
+- 디버그 빌드 캐시가 14GB까지 커져 디스크가 가득 찬 문제 → 개발 프로필 디버그 정보 축소(약 1.9GB)
+
+#### v0.3.0 Windows 설치본 실검증
+
+| 항목 | 결과 |
+|---|---|
+| 플로팅 독 | 투명 창으로 오른쪽 아래 표시, 접힘/펼침/퇴근 확인 크기 자동 조절 |
+| 업무 시작 | 메모장 실행 + 폴더 열기, 꺼진 자동화 다시 켜기 |
+| 자리 비움 | 자동화 일시정지(잠금은 실사용 방해로 생략, 코드 경로는 `LockWorkStation`) |
+| 퇴근 | 정리 스크립트 실행 → 메모장 정상 종료(Windows 11 메모장은 저장 안 된 탭을 세션에 보관해 내용 유지 확인) |
+| 입력 검증 | `explorer.exe` 닫기 등록 거부, `file://` 주소 거부 |
+| 캡처 | 전체 1920×1080, 영역 드래그 400×300, 창 캡처, 클립보드 이미지 복사, PNG/JPG 저장, 편집기 닫으면 메모리 캡처 삭제 |
+| 편집기 | 빠른 드래그에서도 도형 3개 모두 기록(실행 취소 3단계), 편집기 재사용 시 새 캡처로 초기화 |
+| OCR | 한국어 UI 텍스트 인식(2배 확대 후 정확도 향상 확인) |
+| Image Studio | 원본 보존, 60KB 제한 맞춤(품질 81), WebP·커버 리사이즈, 없는 파일 오류 표시 |
+| 파일 | DOCX 본문 추출, 허용 안 된 확장자 저장 거부 |
+| 업데이트 설치 | 실행 중 v0.2 → v0.3 덮어 설치 시 정상 종료 후 교체 |
+| 완전 제거 | 독·편집기 포함 프로세스·데이터·자동 실행·설치본 잔여 0 |
+| 자동 테스트 | Rust 44개 · Vitest 21개 · typecheck · lint 통과 |
+
+#### v0.3.0 QA 중 고친 버그
+
+1. 보안 정책(CSP)이 `blob:` 이미지를 막아 편집기·선택 창이 캡처를 표시하지 못함
+2. 새 편집기를 열 때 이전 편집기를 닫으며 방금 찍은 캡처까지 지움 → 편집기 재사용 + 캡처 세대 번호로 보호
+3. Windows에서 동기 명령 안에서 창을 만들면 앱이 멈춤(영역 선택 후 편집기 빈 화면) → 창을 만드는 명령을 모두 비동기로
+4. 빠르게 드래그하면 마지막 도형·선택 영역이 빠짐 → 상태를 reducer/ref로 원자적으로 기록
+5. 플로팅 독 오른쪽이 잘리고 그림자가 창 경계에서 잘려 회색 사각형으로 보임
+6. 문서 비교에서 삭제·수정이 섞이면 엉뚱한 줄끼리 '수정'으로 짝지음 → 유사도 기반 최적 정렬(테스트 추가)
+7. Image Studio 용량 증가 시 "-84% 증가"로 표시, 드롭다운이 카드 밖으로 넘침, 창 목록 앱 이름이 전체 경로로 표시
+
 #### 아직 확인하지 않은 것
 
 - 재부팅 후 실제 자동 시작(레지스트리 등록까지만 확인)
-- 트레이 메뉴 클릭(메뉴 동작 코드는 화면 스위치와 같은 명령 사용)
-- Claude Code 다듬기(이 PC에서 `claude` CLI를 찾지 못함 — 설치·로그인 후 확인 필요)
-- macOS 전체(`NOT_VERIFIED_ON_MACOS`) — 코드·CI 빌드만 준비
+- 자리 비움의 실제 화면 잠금·모니터 끄기, 퇴근 후 PC 종료 예약(사용 중인 PC라 실행하지 않음)
+- 여러 모니터·고배율(125%·150%) 환경의 영역 캡처 좌표
+- Claude Code 다듬기(이 PC에서 `claude` CLI를 찾지 못함)
+- macOS 전체(`NOT_VERIFIED_ON_MACOS`) — 코드·CI 빌드만 준비, macOS OCR 미지원
 
 #### 다음 작업
 
-1. macOS 실기기 QA(집 Mac)
-2. Claude Code CLI 설치 후 AI 다듬기 실사용 확인
+1. 여러 모니터·고배율 환경에서 영역 캡처 확인
+2. macOS 실기기 QA(집 Mac), macOS OCR(Vision) 연동
 3. 후속 모듈(Daily Work Digest 또는 Document Guard)
 
 상세: [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md)

@@ -163,16 +163,6 @@ pub fn set_setting(core: CoreState, key: String, value: serde_json::Value) -> Ap
 }
 
 #[tauri::command]
-pub fn list_log_issues(core: CoreState, target_id: Option<String>) -> AppResult<Vec<serde_json::Value>> {
-    core.list_log_issues(target_id.as_deref())
-}
-
-#[tauri::command]
-pub fn clear_log_issues(core: CoreState, target_id: Option<String>) -> AppResult<usize> {
-    core.clear_log_issues(target_id.as_deref())
-}
-
-#[tauri::command]
 pub fn ai_status() -> crate::ai::ClaudeStatus {
     crate::ai::status()
 }

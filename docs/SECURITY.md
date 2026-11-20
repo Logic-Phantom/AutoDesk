@@ -26,3 +26,11 @@
 ## 제거
 
 [UNINSTALL.md](UNINSTALL.md). 삭제 대상은 앱 식별자(`io.github.logicphantom.autodesk`)를 포함한 경로와 앱이 만든 정확한 자동 실행 값/파일 이름뿐이다.
+
+## 업무 모드·도구(v0.3.0)
+
+- 업무 모드는 사용자가 등록한 프로그램·파일·`http(s)` 주소·스크립트만 실행하고, 등록한 프로세스에만 **정상 종료 요청**을 보낸다. 탐색기·시스템 프로세스·AutoDesk는 등록 단계에서 거부한다. 강제 종료는 기본 OFF.
+- 퇴근의 PC 종료는 모든 대상이 닫혔을 때만 60초 뒤로 예약하고, 결과 창·`shutdown /a`로 취소할 수 있다.
+- 캡처 이미지는 메모리에만 두고 편집 창을 닫으면 지운다. 저장·복사는 사용자가 누를 때만. OCR은 Windows 내장 엔진으로 로컬 처리(외부 전송 없음).
+- 파일 저장 명령은 확장자(txt·md·csv·tsv·json·html·png·jpg)를 제한하고, 경로는 OS 대화상자에서 고른 값만 쓴다. 텍스트 읽기는 20MB 이하·바이너리 거부.
+- 웹뷰 권한(capability)은 `core:default`, `dialog:allow-open`, `dialog:allow-save`만. CSP는 `img-src 'self' data: blob:`(캡처 미리보기)까지만 허용.

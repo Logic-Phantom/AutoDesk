@@ -13,9 +13,12 @@ Rust Core (src-tauri/src/)  ── 프로세스 1개, 관리자 권한 없음, �
   shortcuts.rs   전역 단축키 등록/해제(AutoPaste, AI 다듬기)
   tray.rs        트레이/메뉴 막대(체크 상태는 Core에서 다시 그림)
   commands.rs    Tauri 명령(입력 검증)
-  db.rs          SQLite(마이그레이션 v2) — settings, modules, watch_targets, jobs, activity, file_versions, file_moves, log_offsets, log_issues
+  db.rs          SQLite(마이그레이션 v3) — settings(업무 모드·도구 설정 포함), modules, watch_targets, jobs, activity, file_versions, file_moves
+                 (v2의 LogWatcher 테이블은 v3에서 삭제)
   fsutil.rs      SHA-256, 안정성 확인, 충돌 없는 이름, 안전 이동, 경로 검증, 제외 패턴
-  modules/       backup.rs · downloads.rs · autopaste.rs · logwatch.rs (순수 로직 + 테스트)
+  modules/       backup.rs · downloads.rs · autopaste.rs (순수 로직 + 테스트)
+  workspace.rs   업무 모드: 실행(opener)·정상 종료 요청(WM_CLOSE / osascript quit)·잠금·종료 예약, 보호 프로세스 목록
+  tools/         capture(xcap 캡처, 오버레이/편집 창, 메모리 보관+세대 번호) · ocr(Windows.Media.Ocr) · images(일괄 변환) · files(DOCX 추출, 저장 확장자 제한)
   ai.rs          (선택) Claude Code CLI 호출
   platform.rs    OS 어댑터: autostart, 설치 위치, 앱 소유 경로
   uninstall.rs   완전 제거(미리보기 + 일회성 정리 도우미)
@@ -81,3 +84,18 @@ AutoMateHQ·JARVIS는 GitHub Actions/Cloudflare Workers에서 도는 **서버형
 - 데이터가 없으면 꾸며내지 않는다(통계·이력은 DB 실기록만, 미구현 모듈은 UI에 노출 안 함).
 - AI는 기본 꺼짐, 켜도 결과 검증 후 적용(비거나 지나치게 길면 버림).
 - 비밀 값은 저장소·로그에 남기지 않는다(애초에 저장할 비밀 값이 없음).
+
+## 창 구성(v0.3.0)
+
+같은 프런트 번들을 URL 해시로 나눠 여러 창이 공유한다.
+
+| 창(label) | 해시 | 만들어지는 때 | 비고 |
+|---|---|---|---|
+| main | (없음) | 앱 시작 | 닫기 = 숨김(백그라운드 ON) |
+| dock | `#/dock` | 업무 모드 '플로팅 버튼 표시' ON | 투명·항상 위·작업 표시줄 제외, 내용 크기에 맞춰 오른쪽 아래 기준으로 크기 조절 |
+| overlay | `#/overlay` | 영역 캡처 | 커서가 있는 모니터 전체를 덮음(물리 픽셀 위치·크기), 선택 후 닫힘 |
+| editor | `#/editor` | 캡처 완료 | 이미 열려 있으면 재사용(`capture://updated`), 닫으면 자기 세대의 캡처만 메모리에서 삭제 |
+
+- Windows에서는 **동기 명령(메인 스레드)에서 창을 만들면 교착**되므로 창을 만들거나 닫는 명령은 모두 async(필요 시 `spawn_blocking`)로 둔다.
+- 캡처 PNG는 `CaptureStore{png, gen}`(메모리)에만 있고 IPC 원시 바이트(`ipc::Response`)로 전달한다. 디스크 임시 파일 없음.
+- 도구는 사용자가 열 때만 동작한다. 백그라운드 엔진(감시·작업 큐)과 분리돼 CPU를 쓰지 않는다. 캡처 단축키만 전역 등록(전체 자동화 스위치와 무관, 설정에서 끔).

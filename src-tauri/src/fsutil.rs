@@ -164,21 +164,19 @@ pub fn validate_watch_root(path: &Path, app_data: &Path) -> AppResult<PathBuf> {
     Ok(canon)
 }
 
-/// 감시할 로그 '파일' 검증: 존재하는 일반 파일, 앱 데이터 폴더 밖.
-pub fn validate_log_file(path: &Path, app_data: &Path) -> AppResult<PathBuf> {
-    let canon = dunce_canon(path).ok_or_else(|| AppError::invalid("파일 경로를 확인할 수 없습니다"))?;
-    if !canon.is_file() {
-        return Err(AppError::invalid("로그 파일이 아니거나 존재하지 않습니다"));
-    }
-    if let Some(app) = dunce_canon(app_data) {
-        if canon.starts_with(&app) {
-            return Err(AppError::invalid("AutoDesk 자체 로그는 감시할 수 없습니다"));
+/// UTF-8이 아니면 EUC-KR(CP949)로 해석한다(국내 문서·CSV 대응).
+pub fn decode_text(bytes: &[u8]) -> String {
+    match std::str::from_utf8(bytes) {
+        Ok(s) => s.to_string(),
+        Err(_) => {
+            let (s, _, had_errors) = encoding_rs::EUC_KR.decode(bytes);
+            if had_errors {
+                String::from_utf8_lossy(bytes).to_string()
+            } else {
+                s.to_string()
+            }
         }
     }
-    if canon.parent().map(|p| p.components().count() < 2).unwrap_or(true) {
-        return Err(AppError::invalid("드라이브 루트의 파일은 감시할 수 없습니다"));
-    }
-    Ok(canon)
 }
 
 /// 단순 glob(`*` 와일드카드, 대소문자 무시). `dir/**` 형태는 경로 구성 요소 일치로 처리한다.
@@ -249,6 +247,13 @@ pub fn short_path(p: &Path) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn decode_euc_kr_fallback() {
+        let (bytes, _, _) = encoding_rs::EUC_KR.encode("이름,금액\n");
+        assert_eq!(decode_text(&bytes), "이름,금액\n");
+        assert_eq!(decode_text("정상".as_bytes()), "정상");
+    }
 
     #[test]
     fn wildcard_patterns() {

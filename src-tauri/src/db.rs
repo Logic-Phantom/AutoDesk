@@ -108,6 +108,16 @@ CREATE TABLE log_issues (
 );
 CREATE INDEX idx_log_issues_last ON log_issues(last_seen);
 "#,
+), (
+    3,
+    // LogWatcher 기능 제거(v0.3.0): 남은 테이블·등록·이력을 정리한다.
+    r#"
+DROP TABLE IF EXISTS log_issues;
+DROP TABLE IF EXISTS log_offsets;
+DELETE FROM watch_targets WHERE module_id='logwatch';
+DELETE FROM automation_modules WHERE id='logwatch';
+DELETE FROM activity WHERE module_id='logwatch';
+"#,
 )];
 
 pub fn now() -> String {
